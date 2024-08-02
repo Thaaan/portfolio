@@ -25,7 +25,7 @@ yarn-error.log*
 backend/data/
 
 # Virtual environment
-venv/
+mnist_venv/
 # Python bytecode
 __pycache__/
 *.py[cod]
