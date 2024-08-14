@@ -1,11 +1,8 @@
-from flask import Flask, jsonify, request, send_from_directory
+from flask import Flask, jsonify, request, send_from_directory, Response
 from flask_cors import CORS
 from flask_mail import Mail, Message
-from flask_socketio import SocketIO
-import io, os, base64
+import io, os, base64, time, threading, queue
 from PIL import Image
-import threading
-import time
 import torch
 import torch.nn as nn
 import torch.optim as optim
@@ -20,7 +17,6 @@ if os.environ.get('DYNO'):
 
 app = Flask(__name__, static_folder="../build", static_url_path="/")
 CORS(app)
-socketio = SocketIO(app, cors_allowed_origins="*", async_mode='eventlet')
 
 app.config['MAIL_SERVER'] = 'live.smtp.mailtrap.io'
 app.config['MAIL_PORT'] = 587
@@ -133,9 +129,12 @@ class EarlyStopping:
             if self.counter >= self.patience:
                 self.early_stop = True
 
+# Queue for storing training updates
+training_updates = queue.Queue()
+
 def train_model():
     print("Starting model training...")
-    socketio.emit('training_log', {'data': "Starting model training..."})
+    training_updates.put("Starting model training...")
     start_time = time.time()
 
     transform = transforms.Compose([
@@ -147,7 +146,7 @@ def train_model():
 
     full_dataset = torchvision.datasets.MNIST(root='./data', train=True, download=True, transform=transform)
     dataset_size = len(full_dataset)
-    reduced_size = int(0.3 * dataset_size)  # Use 30% of the data to reduce resource usage
+    reduced_size = int(0.1 * dataset_size)  # Use only 10% of the data
     _, reduced_dataset = random_split(full_dataset, [dataset_size - reduced_size, reduced_size])
 
     train_size = int(0.8 * reduced_size)
@@ -162,7 +161,7 @@ def train_model():
     scheduler = optim.lr_scheduler.ReduceLROnPlateau(optimizer, 'min', patience=2, factor=0.5)
     early_stopping = EarlyStopping(patience=5, min_delta=0.001)
 
-    num_epochs = 5  # Reduced number of epochs for Heroku
+    num_epochs = 3  # Reduced number of epochs
     for epoch in range(num_epochs):
         model.train()
         running_loss = 0.0
@@ -177,7 +176,7 @@ def train_model():
             if i % 100 == 99:  # Print every 100 mini-batches
                 log_message = f'[{epoch + 1}, {i + 1:5d}] loss: {running_loss / 100:.3f}'
                 print(log_message)
-                socketio.emit('training_log', {'data': log_message})
+                training_updates.put(log_message)
                 running_loss = 0.0
 
         # Validate the model
@@ -199,34 +198,41 @@ def train_model():
         accuracy = 100 * correct / total
         log_message = f'Epoch {epoch + 1} validation loss: {val_loss:.4f}, accuracy: {accuracy:.2f}%'
         print(log_message)
-        socketio.emit('training_log', {'data': log_message})
+        training_updates.put(log_message)
 
         scheduler.step(val_loss)
         early_stopping(val_loss)
         if early_stopping.early_stop:
             print("Early stopping")
-            socketio.emit('training_log', {'data': "Early stopping triggered"})
+            training_updates.put("Early stopping triggered")
             break
 
     end_time = time.time()
     training_time = end_time - start_time
-    print(f'Finished Training. Total time: {training_time:.2f} seconds')
-    socketio.emit('training_log', {'data': f'Finished Training. Total time: {training_time:.2f} seconds'})
+    final_message = f'Finished Training. Total time: {training_time:.2f} seconds'
+    print(final_message)
+    training_updates.put(final_message)
     model.eval()  # Set the model to evaluation mode
     model_trained.set()
+    training_updates.put(None)  # Signal end of updates
 
 @app.route('/train', methods=['POST'])
 def train():
     if not model_trained.is_set():
-        try:
-            # Start training in a separate thread
-            training_thread = threading.Thread(target=train_model)
-            training_thread.start()
-            return jsonify({"message": "Training started"}), 200
-        except Exception as e:
-            return jsonify({"error": str(e)}), 500
+        threading.Thread(target=train_model).start()
+        return jsonify({"message": "Training started"}), 200
     else:
         return jsonify({"message": "Model already trained"}), 200
+
+@app.route('/train_updates')
+def train_updates():
+    def generate():
+        while True:
+            update = training_updates.get()
+            if update is None:
+                break
+            yield f"data: {update}\n\n"
+    return Response(generate(), mimetype='text/event-stream')
 
 @app.route('/predict', methods=['POST'])
 def predict():
@@ -255,11 +261,7 @@ def predict():
 
     return jsonify({"prediction": prediction})
 
-@socketio.on('connect')
-def handle_connect():
-    print('Client connected')
-
 if __name__ == '__main__':
     print("Starting Flask server...")
     port = int(os.environ.get("PORT", 5000))
-    socketio.run(app, host='0.0.0.0', port=port)
+    app.run(host='0.0.0.0', port=port)

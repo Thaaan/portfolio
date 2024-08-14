@@ -1,10 +1,11 @@
 import React, { useReducer, useEffect, useCallback, useRef, useState } from 'react';
+import io from 'socket.io-client';
 
 const API_URL = process.env.REACT_APP_API_URL;
 
 const initialState = {
   prediction: null,
-  trainingStatus: 'idle', // 'idle', 'training', 'trained'
+  isTraining: true,
   trainingLogs: [],
   error: null,
   isLoading: false,
@@ -14,8 +15,8 @@ function reducer(state, action) {
   switch (action.type) {
     case 'ADD_LOG':
       return { ...state, trainingLogs: [...state.trainingLogs, action.payload] };
-    case 'SET_TRAINING_STATUS':
-      return { ...state, trainingStatus: action.payload };
+    case 'SET_TRAINING':
+      return { ...state, isTraining: action.payload };
     case 'SET_PREDICTION':
       return { ...state, prediction: action.payload };
     case 'RESET_LOGS':
@@ -32,11 +33,40 @@ function reducer(state, action) {
 const MNISTClassifier = () => {
   const [state, dispatch] = useReducer(reducer, initialState);
   const [commandHistory, setCommandHistory] = useState([]);
-  const [showCanvas, setShowCanvas] = useState(false);
   const [inputVisible, setInputVisible] = useState(true);
+  const [showCanvas, setShowCanvas] = useState(false);
+  const socketRef = useRef(null);
   const terminalRef = useRef(null);
   const inputRef = useRef(null);
-  const eventSourceRef = useRef(null);
+  const stateRef = useRef(state);
+
+  useEffect(() => {
+    stateRef.current = state;
+  }, [state]);
+
+  useEffect(() => {
+    socketRef.current = io(API_URL);
+
+    socketRef.current.on('training_log', (data) => {
+      dispatch({ type: 'ADD_LOG', payload: data.data });
+      if (data.data.includes('Finished Training')) {
+        dispatch({ type: 'SET_TRAINING', payload: false });
+      }
+    });
+
+    socketRef.current.on('connect', () => {
+      dispatch({ type: 'SET_TRAINING', payload: true });
+      dispatch({ type: 'RESET_LOGS' });
+    });
+
+    socketRef.current.on('connect_error', (error) => {
+      dispatch({ type: 'SET_ERROR', payload: 'Failed to connect to server' });
+    });
+
+    return () => {
+      socketRef.current.disconnect();
+    };
+  }, []);
 
   useEffect(() => {
     if (terminalRef.current) {
@@ -45,7 +75,7 @@ const MNISTClassifier = () => {
   }, [state.trainingLogs, commandHistory]);
 
   useEffect(() => {
-    if (state.trainingStatus === 'trained' && !showCanvas) {
+    if (!state.isTraining) {
       setTimeout(() => {
         dispatch({ type: 'ADD_LOG', payload: 'Switching to canvas view...' });
         setTimeout(() => {
@@ -53,12 +83,10 @@ const MNISTClassifier = () => {
         }, 2000);
       }, 2000);
     }
-  }, [state.trainingStatus, showCanvas]);
+  }, [state.isTraining]);
 
   const startTraining = async () => {
     dispatch({ type: 'SET_LOADING', payload: true });
-    dispatch({ type: 'RESET_LOGS' });
-    setInputVisible(false);
     try {
       const response = await fetch(`${API_URL}/train`, {
         method: 'POST',
@@ -68,26 +96,8 @@ const MNISTClassifier = () => {
       }
       const data = await response.json();
       dispatch({ type: 'ADD_LOG', payload: data.message });
-
       if (data.message === 'Model already trained') {
-        dispatch({ type: 'SET_TRAINING_STATUS', payload: 'trained' });
-      } else {
-        dispatch({ type: 'SET_TRAINING_STATUS', payload: 'training' });
-
-        // Start listening for SSE updates
-        eventSourceRef.current = new EventSource(`${API_URL}/train_updates`);
-        eventSourceRef.current.onmessage = (event) => {
-          dispatch({ type: 'ADD_LOG', payload: event.data });
-          if (event.data.includes('Finished Training')) {
-            dispatch({ type: 'SET_TRAINING_STATUS', payload: 'trained' });
-            eventSourceRef.current.close();
-          }
-        };
-        eventSourceRef.current.onerror = (error) => {
-          console.error('SSE Error:', error);
-          dispatch({ type: 'SET_ERROR', payload: 'Error receiving training updates' });
-          eventSourceRef.current.close();
-        };
+        dispatch({ type: 'SET_TRAINING', payload: false });
       }
     } catch (error) {
       console.error('Error:', error);
@@ -98,20 +108,19 @@ const MNISTClassifier = () => {
   };
 
   const handleKeyPress = (e) => {
-    if (e.key === 'Enter') {
-      const command = inputRef.current.value.toLowerCase();
-      if (command === 'start training model') {
-        startTraining();
-      } else if (command === 'switch to canvas' && state.trainingStatus === 'trained') {
-        setShowCanvas(true);
-      } else {
-        dispatch({ type: 'ADD_LOG', payload: 'Unknown command. Try "start training model" or "switch to canvas" if the model is trained.' });
-      }
+    if (e.key === 'Enter' && inputRef.current.value.toLowerCase() === 'start training model') {
+      startTraining();
       setCommandHistory([...commandHistory, inputRef.current.value]);
       setInputVisible(false);
       inputRef.current.value = '';
     }
   };
+
+  useEffect(() => {
+    if (inputRef.current && inputVisible) {
+      inputRef.current.focus();
+    }
+  }, [state.isTraining, inputVisible]);
 
   const Terminal = () => (
     <div className="terminal-window">
@@ -142,7 +151,7 @@ const MNISTClassifier = () => {
               className="terminal-input"
               onKeyPress={handleKeyPress}
               aria-label="Command input"
-              placeholder={state.trainingStatus === 'trained' ? "start training model or switch to canvas" : "start training model"}
+              placeholder="start training model"
             />
           </div>
         )}
