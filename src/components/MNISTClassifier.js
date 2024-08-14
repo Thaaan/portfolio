@@ -1,6 +1,8 @@
 import React, { useReducer, useEffect, useCallback, useRef, useState } from 'react';
 import io from 'socket.io-client';
 
+const API_URL = process.env.API_URL;
+
 const initialState = {
   prediction: null,
   isTraining: true,
@@ -43,7 +45,7 @@ const MNISTClassifier = () => {
   }, [state]);
 
   useEffect(() => {
-    socketRef.current = io('http://localhost:5000');
+    socketRef.current = io(API_URL);
 
     socketRef.current.on('training_log', (data) => {
       dispatch({ type: 'ADD_LOG', payload: data.data });
@@ -86,7 +88,7 @@ const MNISTClassifier = () => {
   const startTraining = async () => {
     dispatch({ type: 'SET_LOADING', payload: true });
     try {
-      const response = await fetch('http://localhost:5000/train', {
+      const response = await fetch(`${API_URL}/train`, {
         method: 'POST',
       });
       if (!response.ok) {
@@ -289,7 +291,7 @@ const MNISTClassifier = () => {
       const imageData = canvas.toDataURL('image/png');
 
       try {
-        const response = await fetch('http://localhost:5000/predict', {
+        const response = await fetch(`${API_URL}/predict`, {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json',

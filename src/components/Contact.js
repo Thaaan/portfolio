@@ -2,6 +2,8 @@ import React, { useState, useRef, useEffect } from 'react';
 import { Send, Check, User, Bot } from 'lucide-react';
 import './Contact.css';
 
+const API_URL = process.env.API_URL;
+
 const Contact = () => {
   const [formData, setFormData] = useState({
     name: '',
@@ -53,7 +55,7 @@ const Contact = () => {
       setIsSubmitting(true);
       setSubmitError(null);
       try {
-        const response = await fetch('http://localhost:5000/email', {
+        const response = await fetch(`${API_URL}/email`, {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json',
@@ -87,21 +89,20 @@ const Contact = () => {
     if (chatInput.trim()) {
       setChatMessages(prevMessages => [...prevMessages, { sender: 'user', text: chatInput }]);
       setChatInput('');
-      // Placeholder for bot response
+
+      // TODO: replace placeholder for bot response
       setTimeout(() => {
         setChatMessages(prevMessages => [...prevMessages, { sender: 'bot', text: 'This is a placeholder response.' }]);
       }, 1000);
     }
   };
 
-  // Function to scroll to the bottom of the chatbox
   const scrollToBottom = () => {
     if (chatboxRef.current) {
       chatboxRef.current.scrollTop = chatboxRef.current.scrollHeight;
     }
   };
 
-  // Use useEffect to scroll to bottom when messages change
   useEffect(() => {
     scrollToBottom();
   }, [chatMessages]);
