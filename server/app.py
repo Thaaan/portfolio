@@ -19,7 +19,7 @@ if os.environ.get('DYNO'):
 app = Flask(__name__, static_folder="../build", static_url_path="/")
 CORS(app, supports_credentials=True)
 
-app.config['SECRET_KEY'] = os.urandom(24)
+app.config['SECRET_KEY'] = os.getenv('SECRET_KEY')
 
 app.config['MAIL_SERVER'] = 'live.smtp.mailtrap.io'
 app.config['MAIL_PORT'] = 587
@@ -29,6 +29,60 @@ app.config['MAIL_USE_TLS'] = True
 app.config['MAIL_USE_SSL'] = False
 
 mail = Mail(app)
+
+@app.route('/email', methods=['POST'])
+def send_email():
+    try:
+        data = request.json
+        if not data:
+            return jsonify({'error': 'No JSON data received'}), 400
+
+        if not all(key in data for key in ('name', 'email', 'message')):
+            return jsonify({'error': 'Missing required fields'}), 400
+
+        msg = Message('New Contact Form Submission',
+                      sender='portfolio@demomailtrap.com',
+                      recipients=['ethalo10@gmail.com'])
+
+        msg.html = f"""
+        <html>
+            <body style="font-family: Arial, sans-serif; line-height: 1.6; color: #333;">
+                <h2 style="color: #4a4a4a;">New Contact Form Submission</h2>
+                <table style="width: 100%; border-collapse: collapse;">
+                    <tr>
+                        <td style="padding: 10px; border-bottom: 1px solid #ddd;"><strong>Name:</strong></td>
+                        <td style="padding: 10px; border-bottom: 1px solid #ddd;">{data['name']}</td>
+                    </tr>
+                    <tr>
+                        <td style="padding: 10px; border-bottom: 1px solid #ddd;"><strong>Email:</strong></td>
+                        <td style="padding: 10px; border-bottom: 1px solid #ddd;">
+                            <a href="mailto:{data['email']}">{data['email']}</a>
+                        </td>
+                    </tr>
+                </table>
+                <h3 style="color: #4a4a4a; margin-top: 20px;">Message:</h3>
+                <p style="background-color: #f9f9f9; padding: 15px; border-radius: 5px;">
+                    {data['message']}
+                </p>
+            </body>
+        </html>
+        """
+
+        msg.body = f"""
+        New Contact Form Submission
+
+        Name: {data['name']}
+        Email: {data['email']}
+
+        Message:
+        {data['message']}
+        """
+
+        mail.send(msg)
+        return jsonify({'message': 'Email sent successfully'}), 200
+    except Exception as e:
+        app.logger.error(f"Error sending email: {str(e)}")
+        return jsonify({'error': str(e)}), 500
 
 user_models = {}
 user_last_activity = {}
@@ -115,60 +169,6 @@ def cleanup_inactive_models():
 
 # Start the cleanup cycle
 cleanup_inactive_models()
-
-@app.route('/email', methods=['POST'])
-def send_email():
-    try:
-        data = request.json
-        if not data:
-            return jsonify({'error': 'No JSON data received'}), 400
-
-        if not all(key in data for key in ('name', 'email', 'message')):
-            return jsonify({'error': 'Missing required fields'}), 400
-
-        msg = Message('New Contact Form Submission',
-                      sender='portfolio@demomailtrap.com',
-                      recipients=['ethalo10@gmail.com'])
-
-        msg.html = f"""
-        <html>
-            <body style="font-family: Arial, sans-serif; line-height: 1.6; color: #333;">
-                <h2 style="color: #4a4a4a;">New Contact Form Submission</h2>
-                <table style="width: 100%; border-collapse: collapse;">
-                    <tr>
-                        <td style="padding: 10px; border-bottom: 1px solid #ddd;"><strong>Name:</strong></td>
-                        <td style="padding: 10px; border-bottom: 1px solid #ddd;">{data['name']}</td>
-                    </tr>
-                    <tr>
-                        <td style="padding: 10px; border-bottom: 1px solid #ddd;"><strong>Email:</strong></td>
-                        <td style="padding: 10px; border-bottom: 1px solid #ddd;">
-                            <a href="mailto:{data['email']}">{data['email']}</a>
-                        </td>
-                    </tr>
-                </table>
-                <h3 style="color: #4a4a4a; margin-top: 20px;">Message:</h3>
-                <p style="background-color: #f9f9f9; padding: 15px; border-radius: 5px;">
-                    {data['message']}
-                </p>
-            </body>
-        </html>
-        """
-
-        msg.body = f"""
-        New Contact Form Submission
-
-        Name: {data['name']}
-        Email: {data['email']}
-
-        Message:
-        {data['message']}
-        """
-
-        mail.send(msg)
-        return jsonify({'message': 'Email sent successfully'}), 200
-    except Exception as e:
-        app.logger.error(f"Error sending email: {str(e)}")
-        return jsonify({'error': str(e)}), 500
 
 @app.route('/train', methods=['POST'])
 def train():
@@ -331,8 +331,6 @@ def train_updates():
 @app.route('/predict', methods=['POST'])
 def predict():
     user_id, _ = get_or_create_user_id()
-    if user_id not in user_models:
-        return jsonify({"error": "No trained model found"}), 400
 
     user_last_activity[user_id] = time.time()
 
