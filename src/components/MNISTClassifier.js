@@ -331,6 +331,8 @@ const MNISTClassifier = () => {
               console.error(`Error on attempt ${attempts}:`, error);
               if (attempts >= maxRetries) {
                   dispatch({ type: 'SET_ERROR', payload: error.message });
+              } else {
+                  await new Promise(resolve => setTimeout(resolve, 2000));
               }
           }
       }
