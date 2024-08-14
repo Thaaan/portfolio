@@ -27,6 +27,10 @@ app.config['MAIL_USE_SSL'] = False
 
 mail = Mail(app)
 
+user_models = {}
+user_last_activity = {}
+INACTIVE_THRESHOLD = 600
+
 @app.route('/email', methods=['POST'])
 def send_email():
     try:
@@ -85,12 +89,12 @@ def send_email():
 class Net(nn.Module):
     def __init__(self):
         super(Net, self).__init__()
-        self.conv1 = nn.Conv2d(1, 32, 3, 1)
-        self.conv2 = nn.Conv2d(32, 64, 3, 1)
-        self.dropout1 = nn.Dropout(0.25)
-        self.dropout2 = nn.Dropout(0.5)
-        self.fc1 = nn.Linear(9216, 128)
-        self.fc2 = nn.Linear(128, 10)
+        self.conv1 = nn.Conv2d(1, 16, 3, 1)
+        self.conv2 = nn.Conv2d(16, 32, 3, 1)
+        self.dropout1 = nn.Dropout(0.2)
+        self.dropout2 = nn.Dropout(0.4)
+        self.fc1 = nn.Linear(4608, 64)
+        self.fc2 = nn.Linear(64, 10)
 
     def forward(self, x):
         x = self.conv1(x)
@@ -148,7 +152,7 @@ def train_model():
 
     full_dataset = torchvision.datasets.MNIST(root='./data', train=True, download=True, transform=transform)
     dataset_size = len(full_dataset)
-    reduced_size = int(0.5 * dataset_size)  # Use 50% of the data
+    reduced_size = int(0.8 * dataset_size)  # Use 50% of the data
     _, reduced_dataset = random_split(full_dataset, [dataset_size - reduced_size, reduced_size])
 
     train_size = int(0.8 * reduced_size)
