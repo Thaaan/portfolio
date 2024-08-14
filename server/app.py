@@ -1,7 +1,8 @@
-from flask import Flask, jsonify, request, send_from_directory, Response
+from flask import Flask, jsonify, request, send_from_directory, Response, session
 from flask_cors import CORS
 from flask_mail import Mail, Message
-import io, os, base64, time, threading, queue
+from flask_session import Session
+import io, os, base64, time, threading, queue, uuid
 from PIL import Image
 import torch
 import torch.nn as nn
@@ -9,6 +10,7 @@ import torch.optim as optim
 import torchvision
 import torchvision.transforms as transforms
 from torch.utils.data import random_split, DataLoader
+from threading import Timer
 
 # Disable multiprocessing on Heroku
 if os.environ.get('DYNO'):
@@ -16,7 +18,11 @@ if os.environ.get('DYNO'):
     torch.set_num_interop_threads(1)
 
 app = Flask(__name__, static_folder="../build", static_url_path="/")
-CORS(app)
+CORS(app, supports_credentials=True)
+
+app.config['SECRET_KEY'] = os.urandom(24)
+app.config['SESSION_TYPE'] = 'filesystem'
+Session(app)
 
 app.config['MAIL_SERVER'] = 'live.smtp.mailtrap.io'
 app.config['MAIL_PORT'] = 587
@@ -27,9 +33,84 @@ app.config['MAIL_USE_SSL'] = False
 
 mail = Mail(app)
 
+# Dictionary to store user-specific models
 user_models = {}
+
+# Dictionary to store last activity time for each user
 user_last_activity = {}
-INACTIVE_THRESHOLD = 600
+
+INACTIVE_THRESHOLD = 600  # 10 minutes in seconds
+
+# Slightly simplified CNN model
+class Net(nn.Module):
+    def __init__(self):
+        super(Net, self).__init__()
+        self.conv1 = nn.Conv2d(1, 16, 3, 1)
+        self.conv2 = nn.Conv2d(16, 32, 3, 1)
+        self.dropout1 = nn.Dropout(0.2)
+        self.dropout2 = nn.Dropout(0.4)
+        self.fc1 = nn.Linear(4608, 64)
+        self.fc2 = nn.Linear(64, 10)
+
+    def forward(self, x):
+        x = self.conv1(x)
+        x = nn.functional.relu(x)
+        x = self.conv2(x)
+        x = nn.functional.relu(x)
+        x = nn.functional.max_pool2d(x, 2)
+        x = self.dropout1(x)
+        x = torch.flatten(x, 1)
+        x = self.fc1(x)
+        x = nn.functional.relu(x)
+        x = self.dropout2(x)
+        x = self.fc2(x)
+        return nn.functional.log_softmax(x, dim=1)
+
+device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+
+def get_or_create_user_id():
+    if 'user_id' not in session:
+        persistent_token = request.cookies.get('persistent_user_token')
+        if persistent_token:
+            session['user_id'] = persistent_token
+        else:
+            new_user_id = str(uuid.uuid4())
+            session['user_id'] = new_user_id
+
+            response = jsonify({"message": "New user ID created"})
+            response.set_cookie('persistent_user_token', new_user_id, max_age=30*24*60*60)  # 30 days
+            return new_user_id, response
+
+    return session['user_id'], None
+
+def get_or_create_model(user_id):
+    if user_id not in user_models:
+        model = Net().to(device)
+        user_models[user_id] = {
+            'model': model,
+            'trained': False,
+            'training_updates': queue.Queue()
+        }
+    user_last_activity[user_id] = time.time()
+    return user_models[user_id]
+
+def cleanup_inactive_models():
+    current_time = time.time()
+    inactive_users = [user_id for user_id, last_activity in user_last_activity.items()
+                      if current_time - last_activity > INACTIVE_THRESHOLD]
+
+    for user_id in inactive_users:
+        if user_id in user_models:
+            del user_models[user_id]
+        del user_last_activity[user_id]
+
+    print(f"Cleaned up {len(inactive_users)} inactive user models")
+
+    # Schedule the next cleanup
+    Timer(INACTIVE_THRESHOLD, cleanup_inactive_models).start()
+
+# Start the cleanup cycle
+cleanup_inactive_models()
 
 @app.route('/email', methods=['POST'])
 def send_email():
@@ -85,35 +166,22 @@ def send_email():
         app.logger.error(f"Error sending email: {str(e)}")
         return jsonify({'error': str(e)}), 500
 
-# Improved CNN model
-class Net(nn.Module):
-    def __init__(self):
-        super(Net, self).__init__()
-        self.conv1 = nn.Conv2d(1, 16, 3, 1)
-        self.conv2 = nn.Conv2d(16, 32, 3, 1)
-        self.dropout1 = nn.Dropout(0.2)
-        self.dropout2 = nn.Dropout(0.4)
-        self.fc1 = nn.Linear(4608, 64)
-        self.fc2 = nn.Linear(64, 10)
+@app.route('/train', methods=['POST'])
+def train():
+    user_id, response = get_or_create_user_id()
 
-    def forward(self, x):
-        x = self.conv1(x)
-        x = nn.functional.relu(x)
-        x = self.conv2(x)
-        x = nn.functional.relu(x)
-        x = nn.functional.max_pool2d(x, 2)
-        x = self.dropout1(x)
-        x = torch.flatten(x, 1)
-        x = self.fc1(x)
-        x = nn.functional.relu(x)
-        x = self.dropout2(x)
-        x = self.fc2(x)
-        return nn.functional.log_softmax(x, dim=1)
+    user_data = get_or_create_model(user_id)
+    if user_data['trained']:
+        result = {"message": "Model already trained"}
+    else:
+        threading.Thread(target=train_model, args=(user_id,)).start()
+        result = {"message": "Training started"}
 
-model = Net()
-device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
-model = model.to(device)
-model_trained = threading.Event()
+    if response:
+        response.data = jsonify(result).data
+        return response
+    else:
+        return jsonify(result)
 
 class EarlyStopping:
     def __init__(self, patience=5, min_delta=0.001):
@@ -134,13 +202,13 @@ class EarlyStopping:
             if self.counter >= self.patience:
                 self.early_stop = True
 
-# Queue for storing training updates
-training_updates = queue.Queue()
+def train_model(user_id):
+    user_data = user_models[user_id]
+    model = user_data['model']
+    updates_queue = user_data['training_updates']
 
-
-def train_model():
     print("Starting model training...")
-    training_updates.put("Starting model training...")
+    updates_queue.put("Starting model training...")
     start_time = time.time()
 
     transform = transforms.Compose([
@@ -152,7 +220,7 @@ def train_model():
 
     full_dataset = torchvision.datasets.MNIST(root='./data', train=True, download=True, transform=transform)
     dataset_size = len(full_dataset)
-    reduced_size = int(0.8 * dataset_size)  # Use 50% of the data
+    reduced_size = int(0.8 * dataset_size)  # Use 80% of the data
     _, reduced_dataset = random_split(full_dataset, [dataset_size - reduced_size, reduced_size])
 
     train_size = int(0.8 * reduced_size)
@@ -184,7 +252,7 @@ def train_model():
             if i % 100 == 99:  # Print every 100 mini-batches
                 log_message = f'[{epoch + 1}, {i + 1:5d}] loss: {running_loss / 100:.3f}'
                 print(log_message)
-                training_updates.put(log_message)
+                updates_queue.put(log_message)
                 running_loss = 0.0
 
         # Validate the model
@@ -206,53 +274,68 @@ def train_model():
         accuracy = 100 * correct / total
         log_message = f'Epoch {epoch + 1} validation loss: {val_loss:.4f}, accuracy: {accuracy:.2f}%'
         print(log_message)
-        training_updates.put(log_message)
+        updates_queue.put(log_message)
 
         if accuracy > best_accuracy:
             best_accuracy = accuracy
-            torch.save(model.state_dict(), 'best_model.pth')
+            torch.save(model.state_dict(), f'best_model_{user_id}.pth')
             print(f"New best model saved with accuracy: {best_accuracy:.2f}%")
-            training_updates.put(f"New best model saved with accuracy: {best_accuracy:.2f}%")
+            updates_queue.put(f"New best model saved with accuracy: {best_accuracy:.2f}%")
 
         scheduler.step(val_loss)
         early_stopping(val_loss)
         if early_stopping.early_stop:
             print("Early stopping")
-            training_updates.put("Early stopping triggered")
+            updates_queue.put("Early stopping triggered")
             break
 
     end_time = time.time()
     training_time = end_time - start_time
     final_message = f'Finished Training. Total time: {training_time:.2f} seconds. Best accuracy: {best_accuracy:.2f}%'
     print(final_message)
-    training_updates.put(final_message)
+    updates_queue.put(final_message)
 
     # Load the best model
-    model.load_state_dict(torch.load('best_model.pth'))
+    model.load_state_dict(torch.load(f'best_model_{user_id}.pth'))
     model.eval()  # Set the model to evaluation mode
-    model_trained.set()
-    training_updates.put(None)  # Signal end of updates
-
-@app.route('/train', methods=['POST'])
-def train():
-    if not model_trained.is_set():
-        threading.Thread(target=train_model).start()
-        return jsonify({"message": "Training started"}), 200
-    else:
-        return jsonify({"message": "Model already trained"}), 200
+    user_data['trained'] = True
+    user_last_activity[user_id] = time.time()
+    updates_queue.put(None)  # Signal end of updates
 
 @app.route('/train_updates')
 def train_updates():
+    user_id, _ = get_or_create_user_id()
+    if user_id not in user_models:
+        return jsonify({"error": "No active training session"}), 400
+
+    user_last_activity[user_id] = time.time()
+
     def generate():
+        updates_queue = user_models[user_id]['training_updates']
         while True:
-            update = training_updates.get()
-            if update is None:
-                break
-            yield f"data: {update}\n\n"
+            try:
+                update = updates_queue.get(timeout=20)  # 20-second timeout
+                if update is None:
+                    break
+                yield f"data: {update}\n\n"
+                user_last_activity[user_id] = time.time()
+            except queue.Empty:
+                yield ": keep-alive\n\n"
+
     return Response(generate(), mimetype='text/event-stream')
 
 @app.route('/predict', methods=['POST'])
 def predict():
+    user_id, _ = get_or_create_user_id()
+    if user_id not in user_models:
+        return jsonify({"error": "No trained model found"}), 400
+
+    user_data = user_models[user_id]
+    if not user_data['trained']:
+        return jsonify({"error": "Model is not trained yet"}), 400
+
+    user_last_activity[user_id] = time.time()
+
     try:
         # Get the image data from the request
         image_data = request.json['image']
@@ -270,6 +353,7 @@ def predict():
         image_tensor = transform(image).unsqueeze(0).to(device)
 
         # Make prediction
+        model = user_data['model']
         with torch.no_grad():
             output = model(image_tensor)
             prediction = output.argmax(dim=1).item()

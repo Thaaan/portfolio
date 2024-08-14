@@ -62,6 +62,7 @@ const MNISTClassifier = () => {
     try {
       const response = await fetch(`${API_URL}/train`, {
         method: 'POST',
+        credentials: 'include'
       });
       if (!response.ok) {
         throw new Error('Failed to start training');
@@ -75,7 +76,7 @@ const MNISTClassifier = () => {
         dispatch({ type: 'SET_TRAINING_STATUS', payload: 'training' });
 
         // Start listening for SSE updates
-        eventSourceRef.current = new EventSource(`${API_URL}/train_updates`);
+        eventSourceRef.current = new EventSource(`${API_URL}/train_updates`, { withCredentials: true });
         eventSourceRef.current.onmessage = (event) => {
           dispatch({ type: 'ADD_LOG', payload: event.data });
           if (event.data.includes('Finished Training')) {
@@ -284,6 +285,7 @@ const MNISTClassifier = () => {
             'Content-Type': 'application/json',
           },
           body: JSON.stringify({ image: imageData }),
+          credentials: 'include'
         });
 
         if (!response.ok) {
