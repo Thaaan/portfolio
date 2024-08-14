@@ -249,9 +249,6 @@ def train_updates():
 
 @app.route('/predict', methods=['POST'])
 def predict():
-    if not model_trained.is_set():
-        return jsonify({"error": "Model is not trained yet"}), 400
-
     try:
         # Get the image data from the request
         image_data = request.json['image']
