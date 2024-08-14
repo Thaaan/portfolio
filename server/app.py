@@ -15,7 +15,7 @@ from torch.utils.data import random_split, DataLoader
 
 app = Flask(__name__, static_folder="../build", static_url_path="/")
 CORS(app)
-socketio = SocketIO(app, cors_allowed_origins="*")
+socketio = SocketIO(app, cors_allowed_origins="*", async_mode='eventlet')
 
 app.config['MAIL_SERVER'] = 'live.smtp.mailtrap.io'
 app.config['MAIL_PORT'] = 587
@@ -28,7 +28,7 @@ mail = Mail(app)
 
 # Serve React app
 @app.route('/')
-def serve_index():
+def index():
     return send_from_directory(app.static_folder, 'index.html')
 
 @app.route('/email', methods=['POST'])
@@ -252,4 +252,5 @@ def handle_connect():
 
 if __name__ == '__main__':
     print("Starting Flask server...")
-    socketio.run(app)
+    port = int(os.environ.get("PORT", 5000))
+    socketio.run(app, host='0.0.0.0', port=port)
