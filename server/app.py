@@ -33,15 +33,10 @@ app.config['MAIL_USE_SSL'] = False
 
 mail = Mail(app)
 
-# Dictionary to store user-specific models
 user_models = {}
-
-# Dictionary to store last activity time for each user
 user_last_activity = {}
+INACTIVE_THRESHOLD = 600
 
-INACTIVE_THRESHOLD = 600  # 10 minutes in seconds
-
-# Slightly simplified CNN model
 class Net(nn.Module):
     def __init__(self):
         super(Net, self).__init__()
@@ -102,7 +97,14 @@ def cleanup_inactive_models():
     for user_id in inactive_users:
         if user_id in user_models:
             del user_models[user_id]
-        del user_last_activity[user_id]
+        if user_id in user_last_activity:
+            del user_last_activity[user_id]
+
+        # Delete the saved model file
+        model_path = f'best_model_{user_id}.pth'
+        if os.path.exists(model_path):
+            os.remove(model_path)
+            print(f"Removed model file: {model_path}")
 
     print(f"Cleaned up {len(inactive_users)} inactive user models")
 
