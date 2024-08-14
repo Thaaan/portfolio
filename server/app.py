@@ -68,19 +68,34 @@ class Net(nn.Module):
 device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 
 def get_or_create_user_id():
-    if 'user_id' not in session:
-        persistent_token = request.cookies.get('persistent_user_token')
+    # Get the persistent token from the cookies
+    persistent_token = request.cookies.get('persistent_user_token')
+
+    # Check if 'user_id' exists in the session
+    if 'user_id' in session:
+        # If persistent_token exists and is different from session user_id, synchronize them
+        if persistent_token and session['user_id'] != persistent_token:
+            # Option 1: Update session to match the persistent token
+            session['user_id'] = persistent_token
+        elif not persistent_token:
+            # Option 2: Update the persistent token to match the session user_id
+            response = jsonify({"message": "User ID synchronized"})
+            response.set_cookie('persistent_user_token', session['user_id'], max_age=30*24*60*60)
+            return session['user_id'], response
+    else:
+        # No user_id in session, check if persistent_token exists
         if persistent_token:
             session['user_id'] = persistent_token
         else:
+            # Neither exists, create a new user_id
             new_user_id = str(uuid.uuid4())
             session['user_id'] = new_user_id
-
             response = jsonify({"message": "New user ID created"})
             response.set_cookie('persistent_user_token', new_user_id, max_age=30*24*60*60)  # 30 days
             return new_user_id, response
 
     return session['user_id'], None
+
 
 def get_or_create_model(user_id):
     with user_models_lock:
