@@ -34,6 +34,7 @@ mail = Mail(app)
 
 # Initialize Redis connection
 redis_client = redis.from_url(os.getenv('REDIS_URL'))
+INACTIVE_THRESHOLD = 600
 
 def get_or_create_user_id():
     user_id = request.cookies.get('user_id')
