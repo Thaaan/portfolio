@@ -26,6 +26,11 @@ app.config['MAIL_USE_SSL'] = False
 
 mail = Mail(app)
 
+# Serve React app
+@app.route('/')
+def serve_index():
+    return send_from_directory(app.static_folder, 'index.html')
+
 @app.route('/email', methods=['POST'])
 def send_email():
     try:
@@ -79,15 +84,6 @@ def send_email():
     except Exception as e:
         app.logger.error(f"Error sending email: {str(e)}")
         return jsonify({'error': str(e)}), 500
-
-# Serve React app
-@app.route('/', defaults={'path': ''})
-@app.route('/<path:path>')
-def serve_react_app(path):
-    if path != "" and os.path.exists(os.path.join(app.static_folder, path)):
-        return send_from_directory(app.static_folder, path)
-    else:
-        return send_from_directory(app.static_folder, 'index.html')
 
 # Slightly simplified CNN model
 class Net(nn.Module):
