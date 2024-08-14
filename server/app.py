@@ -236,30 +236,31 @@ def train_updates():
 
 @app.route('/predict', methods=['POST'])
 def predict():
-    # Wait for the model to be trained
-    model_trained.wait()
+    try:
+        # Get the image data from the request
+        image_data = request.json['image']
 
-    # Get the image data from the request
-    image_data = request.json['image']
+        # Decode the base64 image
+        image_data = base64.b64decode(image_data.split(',')[1])
+        image = Image.open(io.BytesIO(image_data)).convert('L')
 
-    # Decode the base64 image
-    image_data = base64.b64decode(image_data.split(',')[1])
-    image = Image.open(io.BytesIO(image_data)).convert('L')
+        # Preprocess the image
+        transform = transforms.Compose([
+            transforms.Resize((28, 28)),
+            transforms.ToTensor(),
+            transforms.Normalize((0.1307,), (0.3081,))
+        ])
+        image_tensor = transform(image).unsqueeze(0).to(device)
 
-    # Preprocess the image
-    transform = transforms.Compose([
-        transforms.Resize((28, 28)),
-        transforms.ToTensor(),
-        transforms.Normalize((0.1307,), (0.3081,))
-    ])
-    image_tensor = transform(image).unsqueeze(0).to(device)
+        # Make prediction
+        with torch.no_grad():
+            output = model(image_tensor)
+            prediction = output.argmax(dim=1).item()
 
-    # Make prediction
-    with torch.no_grad():
-        output = model(image_tensor)
-        prediction = output.argmax(dim=1).item()
-
-    return jsonify({"prediction": prediction})
+        return jsonify({"prediction": prediction})
+    except Exception as e:
+        app.logger.error(f"Prediction error: {str(e)}")
+        return jsonify({"error": "An error occurred during prediction"}), 500
 
 if __name__ == '__main__':
     print("Starting Flask server...")
