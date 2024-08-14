@@ -13,7 +13,7 @@ import torchvision
 import torchvision.transforms as transforms
 from torch.utils.data import random_split, DataLoader
 
-app = Flask(__name__, static_folder="../client/build", static_url_path="/")
+app = Flask(__name__, static_folder="../build", static_url_path="/")
 CORS(app)
 socketio = SocketIO(app, cors_allowed_origins="*")
 
