@@ -71,6 +71,30 @@ const MNISTClassifier = () => {
     }
   }, [state.trainingStatus, showCanvas]);
 
+  // SSE connection logic with reconnection
+  const startSSEConnection = useCallback(() => {
+    eventSourceRef.current = new EventSource(`${API_URL}/train_updates`, { withCredentials: true });
+
+    eventSourceRef.current.onmessage = (event) => {
+      dispatch({ type: 'ADD_LOG', payload: event.data });
+      if (event.data.includes('Finished Training')) {
+        dispatch({ type: 'SET_TRAINING_STATUS', payload: 'trained' });
+        eventSourceRef.current.close();
+      }
+    };
+
+    eventSourceRef.current.onerror = (error) => {
+      console.error('SSE Error:', error);
+      dispatch({ type: 'SET_ERROR', payload: 'Error receiving training updates' });
+      eventSourceRef.current.close();
+
+      // Attempt to reconnect after a delay
+      setTimeout(() => {
+        startSSEConnection();
+      }, 2000);  // Adjust the reconnection delay as needed
+    };
+  }, []);
+
   const startTraining = async () => {
     dispatch({ type: 'SET_LOADING', payload: true });
     dispatch({ type: 'RESET_LOGS' });
@@ -90,21 +114,7 @@ const MNISTClassifier = () => {
         dispatch({ type: 'SET_TRAINING_STATUS', payload: 'trained' });
       } else {
         dispatch({ type: 'SET_TRAINING_STATUS', payload: 'training' });
-
-        // Start listening for SSE updates
-        eventSourceRef.current = new EventSource(`${API_URL}/train_updates`, { withCredentials: true });
-        eventSourceRef.current.onmessage = (event) => {
-          dispatch({ type: 'ADD_LOG', payload: event.data });
-          if (event.data.includes('Finished Training')) {
-            dispatch({ type: 'SET_TRAINING_STATUS', payload: 'trained' });
-            eventSourceRef.current.close();
-          }
-        };
-        eventSourceRef.current.onerror = (error) => {
-          console.error('SSE Error:', error);
-          dispatch({ type: 'SET_ERROR', payload: 'Error receiving training updates' });
-          eventSourceRef.current.close();
-        };
+        startSSEConnection();  // Start SSE connection
       }
     } catch (error) {
       console.error('Error:', error);
