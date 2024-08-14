@@ -357,6 +357,7 @@ def predict():
         image_tensor = transform(image).unsqueeze(0).to(device)
 
         # Make prediction
+        user_data = user_models[user_id]
         model = user_data['model']
         with torch.no_grad():
             output = model(image_tensor)
