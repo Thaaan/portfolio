@@ -102,14 +102,10 @@ const MNISTClassifier = () => {
       const command = inputRef.current.value.toLowerCase();
       if (command === 'start training model') {
         startTraining();
-      } else if (command === 'switch to canvas' && state.trainingStatus === 'trained') {
-        setShowCanvas(true);
-      } else {
-        dispatch({ type: 'ADD_LOG', payload: 'Unknown command. Try "start training model" or "switch to canvas" if the model is trained.' });
+        setCommandHistory([...commandHistory, inputRef.current.value]);
+        setInputVisible(false);
+        inputRef.current.value = '';
       }
-      setCommandHistory([...commandHistory, inputRef.current.value]);
-      setInputVisible(false);
-      inputRef.current.value = '';
     }
   };
 
