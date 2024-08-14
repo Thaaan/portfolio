@@ -10,7 +10,7 @@ import torch.optim as optim
 import torchvision
 import torchvision.transforms as transforms
 from torch.utils.data import random_split, DataLoader
-from threading import Timer
+from threading import Timer, Lock
 
 # Disable multiprocessing on Heroku
 if os.environ.get('DYNO'):
@@ -36,6 +36,10 @@ mail = Mail(app)
 user_models = {}
 user_last_activity = {}
 INACTIVE_THRESHOLD = 600
+
+# Create a lock for user_models and user_last_activity
+user_models_lock = Lock()
+user_last_activity_lock = Lock()
 
 class Net(nn.Module):
     def __init__(self):
@@ -79,40 +83,45 @@ def get_or_create_user_id():
     return session['user_id'], None
 
 def get_or_create_model(user_id):
-    if user_id not in user_models:
-        model = Net().to(device)
-        user_models[user_id] = {
-            'model': model,
-            'trained': False,
-            'training_updates': queue.Queue()
-        }
-    user_last_activity[user_id] = time.time()
-    return user_models[user_id]
+    with user_models_lock:
+        if user_id not in user_models:
+            model = Net().to(device)
+            user_models[user_id] = {
+                'model': model,
+                'trained': False,
+                'training_updates': queue.Queue()
+            }
+        with user_last_activity_lock:
+            user_last_activity[user_id] = time.time()
+        return user_models[user_id]
 
 @app.route('/heartbeat', methods=['POST'])
 def heartbeat():
     user_id, _ = get_or_create_user_id()
-    user_last_activity[user_id] = time.time()
+    with user_last_activity_lock:
+        user_last_activity[user_id] = time.time()
     return jsonify({"message": "Heartbeat received"}), 200
 
 def cleanup_inactive_models():
-    current_time = time.time()
-    inactive_users = [user_id for user_id, last_activity in user_last_activity.items()
-                      if current_time - last_activity > INACTIVE_THRESHOLD]
+    with user_models_lock:
+        with user_last_activity_lock:
+            current_time = time.time()
+            inactive_users = [user_id for user_id, last_activity in user_last_activity.items()
+                            if current_time - last_activity > INACTIVE_THRESHOLD]
 
-    for user_id in inactive_users:
-        if user_id in user_models:
-            del user_models[user_id]
-        if user_id in user_last_activity:
-            del user_last_activity[user_id]
+            for user_id in inactive_users:
+                if user_id in user_models:
+                    del user_models[user_id]
+                if user_id in user_last_activity:
+                    del user_last_activity[user_id]
 
-        # Delete the saved model file
-        model_path = f'best_model_{user_id}.pth'
-        if os.path.exists(model_path):
-            os.remove(model_path)
-            print(f"Removed model file: {model_path}")
+                # Delete the saved model file
+                model_path = f'best_model_{user_id}.pth'
+                if os.path.exists(model_path):
+                    os.remove(model_path)
+                    print(f"Removed model file: {model_path}")
 
-    print(f"Cleaned up {len(inactive_users)} inactive user models")
+            print(f"Cleaned up {len(inactive_users)} inactive user models")
 
     # Schedule the next cleanup
     Timer(INACTIVE_THRESHOLD, cleanup_inactive_models).start()
@@ -211,7 +220,8 @@ class EarlyStopping:
                 self.early_stop = True
 
 def train_model(user_id):
-    user_data = user_models[user_id]
+    with user_models_lock:
+        user_data = user_models[user_id]
     model = user_data['model']
     updates_queue = user_data['training_updates']
 
@@ -306,27 +316,33 @@ def train_model(user_id):
     # Load the best model
     model.load_state_dict(torch.load(f'best_model_{user_id}.pth'))
     model.eval()  # Set the model to evaluation mode
-    user_data['trained'] = True
-    user_last_activity[user_id] = time.time()
+    with user_models_lock:
+        user_data['trained'] = True
+    with user_last_activity_lock:
+        user_last_activity[user_id] = time.time()
     updates_queue.put(None)  # Signal end of updates
 
 @app.route('/train_updates')
 def train_updates():
     user_id, _ = get_or_create_user_id()
-    if user_id not in user_models:
-        return jsonify({"error": "No active training session"}), 400
+    with user_models_lock:
+        if user_id not in user_models:
+            return jsonify({"error": "No active training session"}), 400
 
-    user_last_activity[user_id] = time.time()
+    with user_last_activity_lock:
+        user_last_activity[user_id] = time.time()
 
     def generate():
-        updates_queue = user_models[user_id]['training_updates']
+        with user_models_lock:
+            updates_queue = user_models[user_id]['training_updates']
         while True:
             try:
                 update = updates_queue.get(timeout=20)  # 20-second timeout
                 if update is None:
                     break
                 yield f"data: {update}\n\n"
-                user_last_activity[user_id] = time.time()
+                with user_last_activity_lock:
+                    user_last_activity[user_id] = time.time()
             except queue.Empty:
                 yield ": keep-alive\n\n"
 
@@ -335,10 +351,12 @@ def train_updates():
 @app.route('/predict', methods=['POST'])
 def predict():
     user_id, _ = get_or_create_user_id()
-    if user_id not in user_models:
-        return jsonify({"error": "No trained model found"}), 400
+    with user_models_lock:
+        if user_id not in user_models:
+            return jsonify({"error": "No trained model found"}), 400
 
-    user_last_activity[user_id] = time.time()
+    with user_last_activity_lock:
+        user_last_activity[user_id] = time.time()
 
     try:
         # Get the image data from the request
@@ -357,7 +375,8 @@ def predict():
         image_tensor = transform(image).unsqueeze(0).to(device)
 
         # Make prediction
-        user_data = user_models[user_id]
+        with user_models_lock:
+            user_data = user_models[user_id]
         model = user_data['model']
         with torch.no_grad():
             output = model(image_tensor)
