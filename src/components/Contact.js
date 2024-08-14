@@ -2,7 +2,7 @@ import React, { useState, useRef, useEffect } from 'react';
 import { Send, Check, User, Bot } from 'lucide-react';
 import './Contact.css';
 
-const API_URL = process.env.API_URL;
+const API_URL = process.env.REACT_APP_API_URL;
 
 const Contact = () => {
   const [formData, setFormData] = useState({

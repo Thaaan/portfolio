@@ -1,7 +1,7 @@
 import React, { useReducer, useEffect, useCallback, useRef, useState } from 'react';
 import io from 'socket.io-client';
 
-const API_URL = process.env.API_URL;
+const API_URL = process.env.REACT_APP_API_URL;
 
 const initialState = {
   prediction: null,
