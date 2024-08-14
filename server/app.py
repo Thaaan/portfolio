@@ -138,6 +138,7 @@ class EarlyStopping:
 # Queue for storing training updates
 training_updates = queue.Queue()
 
+
 def train_model():
     print("Starting model training...")
     training_updates.put("Starting model training...")
@@ -152,19 +153,22 @@ def train_model():
 
     full_dataset = torchvision.datasets.MNIST(root='./data', train=True, download=True, transform=transform)
     dataset_size = len(full_dataset)
-    train_size = int(0.8 * dataset_size)
-    val_size = dataset_size - train_size
-    train_dataset, val_dataset = random_split(full_dataset, [train_size, val_size])
+    reduced_size = int(0.5 * dataset_size)  # Use 50% of the data
+    _, reduced_dataset = random_split(full_dataset, [dataset_size - reduced_size, reduced_size])
 
-    train_loader = DataLoader(train_dataset, batch_size=64, shuffle=True, num_workers=0)
-    val_loader = DataLoader(val_dataset, batch_size=1000, shuffle=False, num_workers=0)
+    train_size = int(0.8 * reduced_size)
+    val_size = reduced_size - train_size
+    train_dataset, val_dataset = random_split(reduced_dataset, [train_size, val_size])
+
+    train_loader = DataLoader(train_dataset, batch_size=32, shuffle=True, num_workers=0)
+    val_loader = DataLoader(val_dataset, batch_size=100, shuffle=False, num_workers=0)
 
     criterion = nn.CrossEntropyLoss()
     optimizer = optim.Adam(model.parameters(), lr=0.001)
     scheduler = optim.lr_scheduler.ReduceLROnPlateau(optimizer, 'min', patience=2, factor=0.5)
     early_stopping = EarlyStopping(patience=5, min_delta=0.001)
 
-    num_epochs = 10
+    num_epochs = 5  # Reduced number of epochs
     best_accuracy = 0
 
     for epoch in range(num_epochs):
