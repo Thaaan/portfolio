@@ -315,13 +315,7 @@ const MNISTClassifier = () => {
         });
 
         if (!response.ok) {
-          console.error('Failed to classify digit:', response.status, response.statusText);
-
-          // Try to read the response body
-          const responseBody = await response.text(); // Using text() to get the body content
-          console.error('Response body:', responseBody);
-
-          throw new Error(`Failed to classify digit: ${response.status} ${response.statusText}`);
+          throw new Error('Failed to classify digit');
         }
 
         const data = await response.json();
