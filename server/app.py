@@ -331,7 +331,7 @@ def train_updates():
 @app.route('/predict', methods=['POST'])
 def predict():
     user_id, _ = get_or_create_user_id()
-    return jsonify({"user_id": user_id}), 200
+    return jsonify({"user_id": user_models}), 200
 
     user_last_activity[user_id] = time.time()
 
