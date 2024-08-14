@@ -3,18 +3,12 @@ import MNISTClassifier from './MNISTClassifier'
 
 import './Intro.css'
 
-//import images
-import githubIcon from './../img/icons/github-logo.png'
-import linkedinIcon from './../img/icons/linkedin.png'
-import twitterIcon from './../img/icons/twitter.png'
-import instaIcon from './../img/icons/instagram.png'
-
 const Intro = () => {
   const socialLinks = [
-    { name: 'GitHub', url: 'https://github.com/Thaaan', icon: githubIcon },
-    { name: 'LinkedIn', url: 'https://www.linkedin.com/in/ethirwin/', icon: linkedinIcon },
-    { name: 'Twitter', url: 'https://x.com/arkto_', icon: twitterIcon },
-    { name: 'Instagram', url: 'https://www.instagram.com/ethan.irw/', icon: instaIcon },
+    { name: 'GitHub', url: 'https://github.com/Thaaan', icon: 'https://d37cdst5t0g8pp.cloudfront.net/img/icons/github-logo.png' },
+    { name: 'LinkedIn', url: 'https://www.linkedin.com/in/ethirwin/', icon: 'https://d37cdst5t0g8pp.cloudfront.net/img/icons/linkedin.png' },
+    { name: 'Twitter', url: 'https://x.com/arkto_', icon: 'https://d37cdst5t0g8pp.cloudfront.net/img/icons/twitter.png' },
+    { name: 'Instagram', url: 'https://www.instagram.com/ethan.irw/', icon: 'https://d37cdst5t0g8pp.cloudfront.net/img/icons/instagram.png' },
   ];
 
   return (

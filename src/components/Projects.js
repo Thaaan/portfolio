@@ -4,17 +4,11 @@ import Modal from 'react-modal';
 
 import './Projects.css'
 
-//import images
-import smartlinkedPreview from './../img/projects/smartlinked.png'
-import smartlinkedDashboard from './../img/projects/smartlinked-dashboard.png'
-import kudoPreview from './../img/projects/kudo.png'
-import kudoCollage from './../img/projects/kudo-collage.png'
-
 const projects = [
   {
     title: 'SmartLinked',
-    img: smartlinkedDashboard,
-    detailedImg: smartlinkedPreview,
+    img: 'https://d37cdst5t0g8pp.cloudfront.net/img/projects/smartlinked-dashboard.png',
+    detailedImg: 'https://d37cdst5t0g8pp.cloudfront.net/img/projects/smartlinked.png',
     linkTitle: 'Website',
     link: 'https://www.smartlinked.app/',
     description: 'SmartLinked is an AI-powered LinkedIn enhancer that offers personalized profile suggestions to help users optimize their LinkedIn presence.',
@@ -22,8 +16,8 @@ const projects = [
   },
   {
     title: 'KudoTools',
-    img: kudoPreview,
-    detailedImg: kudoCollage,
+    img: 'https://d37cdst5t0g8pp.cloudfront.net/img/projects/kudo.png',
+    detailedImg: 'https://d37cdst5t0g8pp.cloudfront.net/img/projects/kudo-collage.png',
     linkTitle: 'Github',
     link: 'https://github.com/Kudo-Tools/kudo-tools.github.io',
     description: 'KudoTools is a resource manager designed to assist in purchasing desirable e-commerce items for resale at a higher price. It includes tools like auto captcha solvers, recaptcha bypasses, and more.',
