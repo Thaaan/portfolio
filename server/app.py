@@ -167,7 +167,7 @@ def train_model():
     scheduler = optim.lr_scheduler.ReduceLROnPlateau(optimizer, 'min', patience=2, factor=0.5)
     early_stopping = EarlyStopping(patience=5, min_delta=0.001)
 
-    num_epochs = 3
+    num_epochs = 5
     best_accuracy = 0
 
     for epoch in range(num_epochs):
