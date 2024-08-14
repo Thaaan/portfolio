@@ -325,6 +325,7 @@ const MNISTClassifier = () => {
         }
 
         const data = await response.json();
+        console.log(data);
         dispatch({ type: 'SET_PREDICTION', payload: data.prediction });
       } catch (error) {
         console.error('Error:', error);
