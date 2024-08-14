@@ -338,10 +338,6 @@ def predict():
     if user_id not in user_models:
         return jsonify({"error": "No trained model found"}), 400
 
-    user_data = user_models[user_id]
-    if not user_data['trained']:
-        return jsonify({"error": "Model is not trained yet"}), 400
-
     user_last_activity[user_id] = time.time()
 
     try:
