@@ -13,6 +13,11 @@ import torchvision
 import torchvision.transforms as transforms
 from torch.utils.data import random_split, DataLoader
 
+# Disable multiprocessing on Heroku
+if os.environ.get('DYNO'):
+    torch.set_num_threads(1)
+    torch.set_num_interop_threads(1)
+
 app = Flask(__name__, static_folder="../build", static_url_path="/")
 CORS(app)
 socketio = SocketIO(app, cors_allowed_origins="*", async_mode='eventlet')
@@ -105,6 +110,8 @@ class Net(nn.Module):
         return nn.functional.log_softmax(x, dim=1)
 
 model = Net()
+device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+model = model.to(device)
 model_trained = threading.Event()
 
 class EarlyStopping:
@@ -140,26 +147,27 @@ def train_model():
 
     full_dataset = torchvision.datasets.MNIST(root='./data', train=True, download=True, transform=transform)
     dataset_size = len(full_dataset)
-    reduced_size = int(0.7 * dataset_size)  # Use 70% of the data
+    reduced_size = int(0.3 * dataset_size)  # Use 30% of the data to reduce resource usage
     _, reduced_dataset = random_split(full_dataset, [dataset_size - reduced_size, reduced_size])
 
     train_size = int(0.8 * reduced_size)
     val_size = reduced_size - train_size
     train_dataset, val_dataset = random_split(reduced_dataset, [train_size, val_size])
 
-    train_loader = DataLoader(train_dataset, batch_size=64, shuffle=True, num_workers=2)
-    val_loader = DataLoader(val_dataset, batch_size=128, shuffle=False, num_workers=2)
+    train_loader = DataLoader(train_dataset, batch_size=64, shuffle=True, num_workers=0)
+    val_loader = DataLoader(val_dataset, batch_size=128, shuffle=False, num_workers=0)
 
     criterion = nn.CrossEntropyLoss()
     optimizer = optim.Adam(model.parameters(), lr=0.001)
     scheduler = optim.lr_scheduler.ReduceLROnPlateau(optimizer, 'min', patience=2, factor=0.5)
     early_stopping = EarlyStopping(patience=5, min_delta=0.001)
 
-    num_epochs = 10
+    num_epochs = 5  # Reduced number of epochs for Heroku
     for epoch in range(num_epochs):
         model.train()
         running_loss = 0.0
         for i, (inputs, labels) in enumerate(train_loader):
+            inputs, labels = inputs.to(device), labels.to(device)
             optimizer.zero_grad()
             outputs = model(inputs)
             loss = criterion(outputs, labels)
@@ -179,6 +187,7 @@ def train_model():
         total = 0
         with torch.no_grad():
             for inputs, labels in val_loader:
+                inputs, labels = inputs.to(device), labels.to(device)
                 outputs = model(inputs)
                 loss = criterion(outputs, labels)
                 val_loss += loss.item()
@@ -237,7 +246,7 @@ def predict():
         transforms.ToTensor(),
         transforms.Normalize((0.1307,), (0.3081,))
     ])
-    image_tensor = transform(image).unsqueeze(0)
+    image_tensor = transform(image).unsqueeze(0).to(device)
 
     # Make prediction
     with torch.no_grad():
