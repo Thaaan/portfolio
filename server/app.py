@@ -10,8 +10,6 @@ import torchvision
 import torchvision.transforms as transforms
 from torch.utils.data import random_split, DataLoader
 from threading import Timer
-import redis
-import pickle
 
 # Disable multiprocessing on Heroku
 if os.environ.get('DYNO'):
@@ -31,59 +29,6 @@ app.config['MAIL_USE_TLS'] = True
 app.config['MAIL_USE_SSL'] = False
 
 mail = Mail(app)
-
-# Initialize Redis connection
-redis_client = redis.from_url(os.getenv('REDIS_URL'))
-INACTIVE_THRESHOLD = 600
-
-def get_or_create_user_id():
-    user_id = request.cookies.get('user_id')
-    if not user_id:
-        user_id = str(uuid.uuid4())
-        response = jsonify({"message": "New user ID created"})
-        response.set_cookie('user_id', user_id, max_age=30*24*60*60)
-        return user_id, response
-    return user_id, None
-
-def get_or_create_model(user_id):
-    model_data = redis_client.get(f'user_model:{user_id}')
-    if model_data:
-        user_data = pickle.loads(model_data)
-    else:
-        model = Net().to(device)
-        user_data = {
-            'model': model,
-            'trained': False,
-            'training_updates': queue.Queue()
-        }
-        redis_client.set(f'user_model:{user_id}', pickle.dumps(user_data))
-
-    redis_client.set(f'user_last_activity:{user_id}', time.time())
-    return user_data
-
-@app.route('/heartbeat', methods=['POST'])
-def heartbeat():
-    user_id, _ = get_or_create_user_id()
-    redis_client.set(f'user_last_activity:{user_id}', time.time())
-    return jsonify({"message": "Heartbeat received"}), 200
-
-def cleanup_inactive_models():
-    current_time = time.time()
-    for key in redis_client.scan_iter("user_last_activity:*"):
-        user_id = key.split(b':')[-1].decode()
-        last_activity = float(redis_client.get(key))
-        if current_time - last_activity > INACTIVE_THRESHOLD:
-            redis_client.delete(f'user_model:{user_id}')
-            redis_client.delete(f'user_last_activity:{user_id}')
-            model_path = f'best_model_{user_id}.pth'
-            if os.path.exists(model_path):
-                os.remove(model_path)
-                print(f"Removed model file: {model_path}")
-    print("Cleanup of inactive models completed.")
-    Timer(INACTIVE_THRESHOLD, cleanup_inactive_models).start()
-
-# Start the cleanup cycle
-cleanup_inactive_models()
 
 @app.route('/email', methods=['POST'])
 def send_email():
@@ -139,6 +84,10 @@ def send_email():
         app.logger.error(f"Error sending email: {str(e)}")
         return jsonify({'error': str(e)}), 500
 
+user_models = {}
+user_last_activity = {}
+INACTIVE_THRESHOLD = 600
+
 class Net(nn.Module):
     def __init__(self):
         super(Net, self).__init__()
@@ -165,9 +114,66 @@ class Net(nn.Module):
 
 device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 
+def get_or_create_user_id():
+    # Retrieve the `user_id` from the cookie
+    user_id = request.cookies.get('user_id')
+
+    # If `user_id` is not found, create a new one and set it in the cookie
+    if not user_id:
+        user_id = str(uuid.uuid4())
+        response = jsonify({"message": "New user ID created"})
+        response.set_cookie('user_id', user_id, max_age=30*24*60*60)  # Cookie lasts 30 days
+        return user_id, response
+
+    # If `user_id` is found, return it without creating a new response
+    return user_id, None
+
+def get_or_create_model(user_id):
+    if user_id not in user_models:
+        model = Net().to(device)
+        user_models[user_id] = {
+            'model': model,
+            'trained': False,
+            'training_updates': queue.Queue()
+        }
+    user_last_activity[user_id] = time.time()
+    return user_models[user_id]
+
+@app.route('/heartbeat', methods=['POST'])
+def heartbeat():
+    user_id, _ = get_or_create_user_id()
+    user_last_activity[user_id] = time.time()
+    return jsonify({"message": "Heartbeat received"}), 200
+
+def cleanup_inactive_models():
+    current_time = time.time()
+    inactive_users = [user_id for user_id, last_activity in user_last_activity.items()
+                      if current_time - last_activity > INACTIVE_THRESHOLD]
+
+    for user_id in inactive_users:
+        if user_id in user_models:
+            del user_models[user_id]
+        if user_id in user_last_activity:
+            del user_last_activity[user_id]
+
+        # Delete the saved model file
+        model_path = f'best_model_{user_id}.pth'
+        if os.path.exists(model_path):
+            os.remove(model_path)
+            print(f"Removed model file: {model_path}")
+
+    print(f"Cleaned up {len(inactive_users)} inactive user models")
+
+    # Schedule the next cleanup
+    Timer(INACTIVE_THRESHOLD, cleanup_inactive_models).start()
+
+# Start the cleanup cycle
+cleanup_inactive_models()
+
 @app.route('/train', methods=['POST'])
 def train():
     user_id, response = get_or_create_user_id()
+
     user_data = get_or_create_model(user_id)
     if user_data['trained']:
         result = {"message": "Model already trained"}
@@ -181,8 +187,27 @@ def train():
     else:
         return jsonify(result)
 
+class EarlyStopping:
+    def __init__(self, patience=5, min_delta=0.001):
+        self.patience = patience
+        self.min_delta = min_delta
+        self.counter = 0
+        self.best_loss = None
+        self.early_stop = False
+
+    def __call__(self, val_loss):
+        if self.best_loss is None:
+            self.best_loss = val_loss
+        elif self.best_loss - val_loss > self.min_delta:
+            self.best_loss = val_loss
+            self.counter = 0
+        else:
+            self.counter += 1
+            if self.counter >= self.patience:
+                self.early_stop = True
+
 def train_model(user_id):
-    user_data = get_or_create_model(user_id)
+    user_data = user_models[user_id]
     model = user_data['model']
     updates_queue = user_data['training_updates']
 
@@ -274,23 +299,30 @@ def train_model(user_id):
     print(final_message)
     updates_queue.put(final_message)
 
-    # Save the updated user data to Redis
-    redis_client.set(f'user_model:{user_id}', pickle.dumps(user_data))
+    # Load the best model
+    model.load_state_dict(torch.load(f'best_model_{user_id}.pth'))
+    model.eval()  # Set the model to evaluation mode
+    user_data['trained'] = True
+    user_last_activity[user_id] = time.time()
+    updates_queue.put(None)  # Signal end of updates
 
 @app.route('/train_updates')
 def train_updates():
     user_id, _ = get_or_create_user_id()
-    user_data = get_or_create_model(user_id)
-    updates_queue = user_data['training_updates']
+    if user_id not in user_models:
+        return jsonify({"error": "No active training session"}), 400
+
+    user_last_activity[user_id] = time.time()
 
     def generate():
+        updates_queue = user_models[user_id]['training_updates']
         while True:
             try:
-                update = updates_queue.get(timeout=20)
+                update = updates_queue.get(timeout=20)  # 20-second timeout
                 if update is None:
                     break
                 yield f"data: {update}\n\n"
-                redis_client.set(f'user_last_activity:{user_id}', time.time())
+                user_last_activity[user_id] = time.time()
             except queue.Empty:
                 yield ": keep-alive\n\n"
 
@@ -299,13 +331,18 @@ def train_updates():
 @app.route('/predict', methods=['POST'])
 def predict():
     user_id, _ = get_or_create_user_id()
-    redis_client.set(f'user_last_activity:{user_id}', time.time())
+
+    user_last_activity[user_id] = time.time()
 
     try:
+        # Get the image data from the request
         image_data = request.json['image']
+
+        # Decode the base64 image
         image_data = base64.b64decode(image_data.split(',')[1])
         image = Image.open(io.BytesIO(image_data)).convert('L')
 
+        # Preprocess the image
         transform = transforms.Compose([
             transforms.Resize((28, 28)),
             transforms.ToTensor(),
@@ -313,7 +350,8 @@ def predict():
         ])
         image_tensor = transform(image).unsqueeze(0).to(device)
 
-        user_data = get_or_create_model(user_id)
+        # Make prediction
+        user_data = user_models[user_id]
         model = user_data['model']
         with torch.no_grad():
             output = model(image_tensor)

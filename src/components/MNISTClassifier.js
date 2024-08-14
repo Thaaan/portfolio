@@ -304,30 +304,39 @@ const MNISTClassifier = () => {
       const canvas = canvasRef.current;
       const imageData = canvas.toDataURL('image/png');
 
-      try {
-        const response = await fetch(`${API_URL}/predict`, {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-          },
-          body: JSON.stringify({ image: imageData }),
-          credentials: 'include'
-        });
+      const maxRetries = 3;
+      let attempts = 0;
+      let success = false;
 
-        if (!response.ok) {
-          throw new Error('Failed to classify digit');
-        }
+      while (attempts < maxRetries && !success) {
+          try {
+              const response = await fetch(`${API_URL}/predict`, {
+                  method: 'POST',
+                  headers: {
+                      'Content-Type': 'application/json',
+                  },
+                  body: JSON.stringify({ image: imageData }),
+                  credentials: 'include',
+              });
 
-        const data = await response.json();
-        console.log(data);
-        dispatch({ type: 'SET_PREDICTION', payload: data.prediction });
-      } catch (error) {
-        console.error('Error:', error);
-        dispatch({ type: 'SET_ERROR', payload: error.message });
-      } finally {
-        dispatch({ type: 'SET_LOADING', payload: false });
+              if (!response.ok) {
+                  throw new Error('Failed to classify digit');
+              }
+
+              const data = await response.json();
+              dispatch({ type: 'SET_PREDICTION', payload: data.prediction });
+              success = true;
+          } catch (error) {
+              attempts++;
+              console.error(`Error on attempt ${attempts}:`, error);
+              if (attempts >= maxRetries) {
+                  dispatch({ type: 'SET_ERROR', payload: error.message });
+              }
+          }
       }
-    }, []);
+
+      dispatch({ type: 'SET_LOADING', payload: false });
+  }, []);
 
     return (
       <div className="canvas-section">
