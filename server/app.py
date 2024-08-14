@@ -34,7 +34,7 @@ app.config['MAIL_USE_SSL'] = False
 
 mail = Mail(app)
 
-redis_url = os.getenv('REDIS_URL', 'redis://localhost:6379')
+redis_url = os.getenv('REDIS_URL')
 redis_client = redis.from_url(redis_url)
 
 INACTIVE_THRESHOLD = 600
