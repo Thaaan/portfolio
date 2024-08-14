@@ -27,11 +27,6 @@ app.config['MAIL_USE_SSL'] = False
 
 mail = Mail(app)
 
-# Serve React app
-@app.route('/')
-def index():
-    return send_from_directory(app.static_folder, 'index.html')
-
 @app.route('/email', methods=['POST'])
 def send_email():
     try:
@@ -168,7 +163,7 @@ def train_model():
     scheduler = optim.lr_scheduler.ReduceLROnPlateau(optimizer, 'min', patience=2, factor=0.5)
     early_stopping = EarlyStopping(patience=5, min_delta=0.001)
 
-    num_epochs = 5  # Reduced number of epochs
+    num_epochs = 3
     best_accuracy = 0
 
     for epoch in range(num_epochs):
@@ -282,6 +277,10 @@ def predict():
     except Exception as e:
         app.logger.error(f"Prediction error: {str(e)}")
         return jsonify({"error": "An error occurred during prediction"}), 500
+
+@app.route('/')
+def index():
+    return send_from_directory(app.static_folder, 'index.html')
 
 if __name__ == '__main__':
     print("Starting Flask server...")
