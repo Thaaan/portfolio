@@ -304,7 +304,7 @@ const MNISTClassifier = () => {
       const canvas = canvasRef.current;
       const imageData = canvas.toDataURL('image/png');
 
-      const maxRetries = 3;
+      const maxRetries = 1;
       let attempts = 0;
       let success = false;
 
@@ -332,7 +332,7 @@ const MNISTClassifier = () => {
               if (attempts >= maxRetries) {
                   dispatch({ type: 'SET_ERROR', payload: error.message });
               } else {
-                  await new Promise(resolve => setTimeout(resolve, 2000));
+                  await new Promise(resolve => setTimeout(resolve, 1000));
               }
           }
       }
