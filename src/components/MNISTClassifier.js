@@ -304,41 +304,30 @@ const MNISTClassifier = () => {
       const canvas = canvasRef.current;
       const imageData = canvas.toDataURL('image/png');
 
-      const maxRetries = 1;
-      let attempts = 0;
-      let success = false;
+      try {
+        const response = await fetch(`${API_URL}/predict`, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({ image: imageData }),
+          credentials: 'include'
+        });
 
-      while (attempts < maxRetries && !success) {
-          try {
-              const response = await fetch(`${API_URL}/predict`, {
-                  method: 'POST',
-                  headers: {
-                      'Content-Type': 'application/json',
-                  },
-                  body: JSON.stringify({ image: imageData }),
-                  credentials: 'include',
-              });
+        if (!response.ok) {
+          throw new Error('Failed to classify digit');
+        }
 
-              if (!response.ok) {
-                  throw new Error('Failed to classify digit');
-              }
-
-              const data = await response.json();
-              dispatch({ type: 'SET_PREDICTION', payload: data.prediction });
-              success = true;
-          } catch (error) {
-              attempts++;
-              console.error(`Error on attempt ${attempts}:`, error);
-              if (attempts >= maxRetries) {
-                  dispatch({ type: 'SET_ERROR', payload: error.message });
-              } else {
-                  await new Promise(resolve => setTimeout(resolve, 1000));
-              }
-          }
+        const data = await response.json();
+        console.log(data);
+        dispatch({ type: 'SET_PREDICTION', payload: data.prediction });
+      } catch (error) {
+        console.error('Error:', error);
+        dispatch({ type: 'SET_ERROR', payload: error.message });
+      } finally {
+        dispatch({ type: 'SET_LOADING', payload: false });
       }
-
-      dispatch({ type: 'SET_LOADING', payload: false });
-  }, []);
+    }, []);
 
     return (
       <div className="canvas-section">
