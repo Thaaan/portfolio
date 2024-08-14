@@ -1,0 +1,292 @@
+/* slick-carousel default styles */
+@import '~slick-carousel/slick/slick.css';
+@import '~slick-carousel/slick/slick-theme.css';
+
+/* Additional styles for your carousel */
+.projects-carousel {
+  width: 80%;
+  margin: 0 auto;
+  padding: 2rem 0;
+  position: relative;
+}
+
+.slick-slide img {
+  width: 100%;
+  height: auto;
+  border-radius: 10px;
+  transition: transform 0.5s;
+}
+
+.slick-slide.slick-center img {
+  transform: scale(1.1);
+}
+
+.slick-prev,
+.slick-next {
+  width: 40px;
+  height: 40px;
+  z-index: 1;
+  position: absolute;
+  top: 50%;
+  transform: translateY(-50%);
+  background-color: transparent;
+  border: none;
+  outline: none;
+}
+
+.slick-prev {
+  left: -20px; /* Moved closer to the slider */
+}
+
+.slick-next {
+  right: -20px; /* Moved closer to the slider */
+}
+
+.slick-prev::before,
+.slick-next::before {
+  font-size: 40px;
+  color: #333;
+  background-color: transparent;
+}
+
+.slick-dots {
+  bottom: -30px;
+}
+
+#projects {
+  align-items: center;
+  text-align: center;
+  padding: 4rem 0;
+  background-color: #f0f0f0;
+  height: 45%;
+}
+
+#projects h2 {
+  font-size: 2.5rem;
+  margin-bottom: 2rem;
+  color: #333;
+}
+
+.card {
+  cursor: pointer;
+  padding: 10px;
+}
+
+.slick-slide {
+  transition: transform 0.5s, opacity 0.5s;
+  opacity: 0.6;
+  transform: scale(0.8);
+}
+
+.slick-center,
+.slick-current {
+  opacity: 1;
+  transform: scale(1);
+}
+
+/* Modal styles */
+.modal {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  background: #13141F;
+  padding: 20px;
+  border-radius: 10px;
+  box-shadow: 0 5px 15px rgba(118, 118, 118, 0.3);
+  width: 90%;
+  max-width: 900px;
+  height: auto;
+  max-height: 90vh;
+  outline: none;
+  color: #f0f0f0;
+  overflow-y: auto;
+}
+
+.overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.75);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
+}
+
+.modal-content {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+  position: relative;
+  height: 100%;
+  padding: 20px;
+  box-sizing: border-box;
+}
+
+.modal-left {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 10px;
+}
+
+.detailed-img {
+  max-width: 100%;
+  max-height: 40vh;
+  object-fit: contain;
+  border-radius: 10px;
+}
+
+.modal-right {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-start;
+  padding: 10px;
+}
+
+.modal-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 10px;
+}
+
+.modal-header h2 {
+  margin: 0;
+  font-size: 1.8rem;
+}
+
+.link {
+  color: #3498db;
+  text-decoration: none;
+  font-size: 1rem;
+  margin-bottom: 10px;
+}
+
+.link:hover {
+  text-decoration: underline;
+}
+
+.modal-right p {
+  margin-bottom: 20px;
+  font-size: 1rem;
+}
+
+.skills {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  margin-top: auto;
+}
+
+.skill-box {
+  background-color: #2a2a3a;
+  color: #ffffff;
+  padding: 5px 15px;
+  border-radius: 5px;
+  font-size: 0.9rem;
+  font-family: 'Fira Code', monospace;
+  cursor: default;
+  transition: transform 0.5s ease;
+}
+
+.skill-box:hover {
+  transform: translateY(-5px);
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+  background-color: #7cb9e8;
+  color: #1e1e2e;
+}
+
+.close-button {
+  position: absolute;
+  top: 10px;
+  right: 10px;
+  background: none;
+  border: none;
+  font-size: 1.5rem;
+  color: #f0f0f0;
+  cursor: pointer;
+}
+
+.close-button:hover {
+  color: #949494;
+}
+
+/* Responsive styles */
+@media (max-width: 1200px) {
+  .projects-carousel {
+    width: 90%;
+  }
+
+  .slick-slide:not(.slick-current) {
+    opacity: 0.5;
+    transform: scale(0.9);
+  }
+
+  .slick-prev {
+    left: -15px; /* Adjusted for smaller screens */
+  }
+
+  .slick-next {
+    right: -15px; /* Adjusted for smaller screens */
+  }
+}
+
+@media (max-width: 768px) {
+  .projects-carousel {
+    width: 90%;
+  }
+
+  .slick-slide img {
+    width: 97%;
+    max-height: 300px;
+    object-fit: cover;
+  }
+
+  .slick-dots {
+    bottom: -15px;
+  }
+
+  .slick-prev {
+    left: -10px; /* Further adjusted for mobile screens */
+  }
+
+  .slick-next {
+    right: -10px; /* Further adjusted for mobile screens */
+  }
+
+  .modal-content {
+    flex-direction: column;
+  }
+
+  .modal-left,
+  .modal-right {
+    width: 100%;
+  }
+
+  .detailed-img {
+    max-height: 30vh;
+  }
+
+  .modal-header h2 {
+    font-size: 1.4rem;
+  }
+
+  .link {
+    font-size: 0.8rem;
+  }
+
+  .modal-right p {
+    font-size: 0.8rem;
+  }
+
+  .skill-box {
+    font-size: 0.7rem;
+    padding: 3px 10px;
+  }
+}

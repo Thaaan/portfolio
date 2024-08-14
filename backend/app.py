@@ -7,6 +7,7 @@ from torch.utils.data import random_split, DataLoader
 from flask import Flask, jsonify, request
 from flask_cors import CORS
 from flask_socketio import SocketIO
+from flask_mail import Mail, Message
 import io
 import base64
 from PIL import Image
@@ -16,6 +17,70 @@ import time
 app = Flask(__name__)
 CORS(app)
 socketio = SocketIO(app, cors_allowed_origins="*")
+
+app.config['MAIL_SERVER']='live.smtp.mailtrap.io'
+app.config['MAIL_PORT'] = 587
+app.config['MAIL_USERNAME'] = 'api'
+app.config['MAIL_PASSWORD'] = '36439b9404b4b965db50939c42c3f98b'
+app.config['MAIL_USE_TLS'] = True
+app.config['MAIL_USE_SSL'] = False
+
+mail = Mail(app)
+
+@app.route('/email', methods=['POST'])
+def send_email():
+    try:
+        data = request.json
+        if not data:
+            return jsonify({'error': 'No JSON data received'}), 400
+
+        if not all(key in data for key in ('name', 'email', 'message')):
+            return jsonify({'error': 'Missing required fields'}), 400
+
+        msg = Message('New Contact Form Submission',
+                      sender='portfolio@demomailtrap.com',
+                      recipients=['ethalo10@gmail.com'])
+
+        msg.html = f"""
+        <html>
+            <body style="font-family: Arial, sans-serif; line-height: 1.6; color: #333;">
+                <h2 style="color: #4a4a4a;">New Contact Form Submission</h2>
+                <table style="width: 100%; border-collapse: collapse;">
+                    <tr>
+                        <td style="padding: 10px; border-bottom: 1px solid #ddd;"><strong>Name:</strong></td>
+                        <td style="padding: 10px; border-bottom: 1px solid #ddd;">{data['name']}</td>
+                    </tr>
+                    <tr>
+                        <td style="padding: 10px; border-bottom: 1px solid #ddd;"><strong>Email:</strong></td>
+                        <td style="padding: 10px; border-bottom: 1px solid #ddd;">
+                            <a href="mailto:{data['email']}">{data['email']}</a>
+                        </td>
+                    </tr>
+                </table>
+                <h3 style="color: #4a4a4a; margin-top: 20px;">Message:</h3>
+                <p style="background-color: #f9f9f9; padding: 15px; border-radius: 5px;">
+                    {data['message']}
+                </p>
+            </body>
+        </html>
+        """
+
+        # Plain text version as a fallback
+        msg.body = f"""
+        New Contact Form Submission
+
+        Name: {data['name']}
+        Email: {data['email']}
+
+        Message:
+        {data['message']}
+        """
+
+        mail.send(msg)
+        return jsonify({'message': 'Email sent successfully'}), 200
+    except Exception as e:
+        app.logger.error(f"Error sending email: {str(e)}")
+        return jsonify({'error': str(e)}), 500
 
 # Slightly simplified CNN model
 class Net(nn.Module):
@@ -150,18 +215,6 @@ def train():
             return jsonify({"error": str(e)}), 500
     else:
         return jsonify({"message": "Model already trained"}), 200
-
-@app.route('/use_pretrained', methods=['POST'])
-def use_pretrained():
-    global model
-    try:
-        # Load a pre-trained model (you'll need to have this saved somewhere)
-        model.load_state_dict(torch.load('pretrained_mnist_model.pth'))
-        model.eval()
-        model_trained.set()
-        return jsonify({"message": "Pretrained model loaded successfully"}), 200
-    except Exception as e:
-        return jsonify({"error": str(e)}), 500
 
 @app.route('/predict', methods=['POST'])
 def predict():

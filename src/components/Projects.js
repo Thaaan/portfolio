@@ -2,42 +2,50 @@ import React, { useState, useRef } from 'react';
 import Slider from 'react-slick';
 import Modal from 'react-modal';
 
+import './Projects.css'
+
 //import images
-import smartlinkedPreview from './../img/smartlinked.png'
-import smartlinkedDashboard from './../img/smartlinked-dashboard.png'
+import smartlinkedPreview from './../img/projects/smartlinked.png'
+import smartlinkedDashboard from './../img/projects/smartlinked-dashboard.png'
+import kudoPreview from './../img/projects/kudo.png'
+import kudoCollage from './../img/projects/kudo-collage.png'
 
 const projects = [
   {
-    title: 'Project 1',
+    title: 'SmartLinked',
     img: smartlinkedDashboard,
     detailedImg: smartlinkedPreview,
-    link: '#',
-    description: 'Detailed information about Project 1',
-    github: 'https://github.com/project1',
+    linkTitle: 'Website',
+    link: 'https://www.smartlinked.app/',
+    description: 'SmartLinked is an AI-powered LinkedIn enhancer that offers personalized profile suggestions to help users optimize their LinkedIn presence.',
+    skills: ['React', 'Node.js', 'AI', 'Machine Learning']
   },
   {
-    title: 'Project 2',
-    img: 'https://via.placeholder.com/800x400',
-    detailedImg: 'https://via.placeholder.com/800x400',
-    link: '#',
-    description: 'Detailed information about Project 2',
-    github: 'https://github.com/project2',
+    title: 'KudoTools',
+    img: kudoPreview,
+    detailedImg: kudoCollage,
+    linkTitle: 'Github',
+    link: 'https://github.com/Kudo-Tools/kudo-tools.github.io',
+    description: 'KudoTools is a resource manager designed to assist in purchasing desirable e-commerce items for resale at a higher price. It includes tools like auto captcha solvers, recaptcha bypasses, and more.',
+    skills: ['Python', 'Web Scraping', 'Automation', 'Security']
   },
   {
     title: 'Project 3',
     img: 'https://via.placeholder.com/800x400',
-    detailedImg: 'https://via.placeholder.com/800x400',
+    detailedImg: 'https://via.placeholder.com/400x800',
+    linkTitle: '',
     link: '#',
     description: 'Detailed information about Project 3',
-    github: 'https://github.com/project3',
+    skills: ['Skill1', 'Skill2', 'Skill3']
   },
   {
     title: 'Project 4',
     img: 'https://via.placeholder.com/800x400',
-    detailedImg: 'https://via.placeholder.com/800x400',
+    detailedImg: 'https://via.placeholder.com/400x800',
+    linkTitle: '',
     link: '#',
     description: 'Detailed information about Project 4',
-    github: 'https://github.com/project4',
+    skills: ['Skill1', 'Skill2', 'Skill3']
   },
 ];
 
@@ -91,6 +99,24 @@ const ProjectCarousel = () => {
     beforeChange: (oldIndex, newIndex) => {
       setCurrentIndex(newIndex);
     },
+    responsive: [
+      {
+        breakpoint: 1200,
+        settings: {
+          slidesToShow: 2,
+          slidesToScroll: 1,
+          centerMode: false,
+        }
+      },
+      {
+        breakpoint: 768,
+        settings: {
+          slidesToShow: 1,
+          slidesToScroll: 1,
+          centerMode: false,
+        }
+      }
+    ]
   };
 
   return (
@@ -98,9 +124,7 @@ const ProjectCarousel = () => {
       <Slider {...settings} className="projects-carousel" ref={sliderRef}>
         {projects.map((project, index) => (
           <div key={index} className="card" onClick={() => handleSlideClick(index, project)}>
-            <a href={project.link}>
-              <img src={project.img} alt={project.title} />
-            </a>
+            <img src={project.img} alt={project.title} />
           </div>
         ))}
       </Slider>
@@ -121,8 +145,13 @@ const ProjectCarousel = () => {
               <div className="modal-header">
                 <h2>{selectedProject.title}</h2>
               </div>
-              <a href={selectedProject.github} className="github-link">Github</a>
+              <a href={selectedProject.link} target="_blank" rel="noreferrer" className="link">{selectedProject.linkTitle}</a>
               <p>{selectedProject.description}</p>
+              <div className="skills">
+                {selectedProject.skills.map((skill, index) => (
+                  <span key={index} className="skill-box">{skill}</span>
+                ))}
+              </div>
             </div>
           </div>
         </Modal>

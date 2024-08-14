@@ -1,13 +1,15 @@
 import React from 'react';
 import MNISTClassifier from './MNISTClassifier'
 
+import './Intro.css'
+
 //import images
 import githubIcon from './../img/icons/github-logo.png'
 import linkedinIcon from './../img/icons/linkedin.png'
 import twitterIcon from './../img/icons/twitter.png'
 import instaIcon from './../img/icons/instagram.png'
 
-const About = () => {
+const Intro = () => {
   const socialLinks = [
     { name: 'GitHub', url: 'https://github.com/Thaaan', icon: githubIcon },
     { name: 'LinkedIn', url: 'https://www.linkedin.com/in/ethirwin/', icon: linkedinIcon },
@@ -16,12 +18,12 @@ const About = () => {
   ];
 
   return (
-    <section id="about">
-      <div className="about-content">
+    <section id="intro">
+      <div className="intro-content">
         <h1 className="welcome-text">Welcome</h1>
         <h2 className="name-text">I'm Ethan</h2>
-        <p className="about-description">
-          [Your brief introduction or tagline goes here. Make it catchy and informative!]
+        <p className="intro-description">
+          A passionate software engineer and avid problem solver. Check out the simple digit classiifer demo on the right!
         </p>
         <div className="social-links">
           {socialLinks.map((link, index) => (
@@ -31,11 +33,11 @@ const About = () => {
           ))}
         </div>
       </div>
-      <div className="about-demo">
+      <div className="intro-demo">
         <MNISTClassifier />
       </div>
     </section>
   );
 };
 
-export default About;
+export default Intro;

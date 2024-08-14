@@ -1,0 +1,212 @@
+@import url('https://fonts.googleapis.com/css2?family=Roboto:wght@300;400;700&family=Montserrat:wght@400;600&family=Fira+Code&display=swap');
+
+.profile-container {
+  width: 100%;
+  padding: 60px 20px;
+  background: linear-gradient(to bottom, #f0f0f0 50%, #1e1e2e 50%);
+  color: #ffffff;
+  font-family: 'Roboto', sans-serif;
+}
+
+.profile-card {
+  width: 85vw;
+  margin: 0 auto;
+  display: flex;
+  background-color: #2a2a3a;
+  border-radius: 10px;
+  overflow: hidden;
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+}
+
+.school-info {
+  flex: 1;
+  padding: 30px;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  background-color: #252537;
+}
+
+.school-info svg {
+  color: #7cb9e8;
+  margin-bottom: 15px;
+}
+
+.school-info h2 {
+  font-family: 'Montserrat', sans-serif;
+  font-size: 2rem;
+  font-weight: 600;
+  margin: 0 0 10px 0;
+}
+
+.school-info h3 {
+  font-family: 'Montserrat', sans-serif;
+  font-size: 1.2rem;
+  font-weight: 400;
+  color: #a0a0a0;
+  margin: 0 0 15px 0;
+}
+
+.school-info p {
+  font-size: 0.9rem;
+  line-height: 1.6;
+  color: #d0d0d0;
+  margin: 0;
+}
+
+.skills-info {
+  flex: 2;
+  padding: 30px;
+  background-color: #323248;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+}
+
+.languages-section, .tools-section {
+  margin-bottom: 30px;
+}
+
+.skills-info h3 {
+  font-family: 'Montserrat', sans-serif;
+  font-size: 1.5rem;
+  font-weight: 600;
+  margin: 0 0 10px 0;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.skills-info > div > p {
+  font-size: 0.9rem;
+  color: #a0a0a0;
+  margin: 0 0 20px 0;
+}
+
+.language-boxes, .tool-boxes {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+}
+
+.language-box, .tool-box {
+  background-color: #2a2a3a;
+  color: #ffffff;
+  padding: 5px 15px;
+  border-radius: 5px;
+  font-size: 0.9rem;
+  font-family: 'Fira Code', monospace;
+  cursor: default;
+  transition: transform 0.5s ease;
+}
+
+.language-box:hover, .tool-box:hover {
+  transform: translateY(-5px);
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+  background-color: #7cb9e8;
+  color: #1e1e2e;
+}
+
+@media (max-width: 1200px) {
+  .school-info h2 {
+    font-size: 1.9rem;
+  }
+  .school-info h3 {
+    font-size: 1.1rem;
+  }
+  .school-info p {
+    font-size: 0.85rem;
+  }
+  .skills-info h3 {
+    font-size: 1.4rem;
+  }
+  .skills-info > div > p {
+    font-size: 0.85rem;
+  }
+  .language-box, .tool-box {
+    font-size: 0.85rem;
+    padding: 5px 13px;
+    border-radius: 5px;
+  }
+}
+
+@media (max-width: 992px) {
+  .profile-container {
+    padding: 40px 15px;
+  }
+  .school-info h2 {
+    font-size: 1.7rem;
+  }
+  .school-info h3 {
+    font-size: 1rem;
+  }
+  .school-info p {
+    font-size: 0.8rem;
+  }
+  .skills-info h3 {
+    font-size: 1.2rem;
+  }
+  .skills-info > div > p {
+    font-size: 0.8rem;
+  }
+  .language-box, .tool-box {
+    font-size: 0.8rem;
+    padding: 4px 11px;
+    border-radius: 5px;
+  }
+}
+
+@media (max-width: 768px) {
+  .profile-card {
+    flex-direction: column;
+  }
+  .school-info, .skills-info {
+    width: 100%;
+  }
+  .school-info h2 {
+    font-size: 1.5rem;
+  }
+  .school-info h3 {
+    font-size: 0.9rem;
+  }
+  .school-info p {
+    font-size: 0.75rem;
+  }
+  .skills-info h3 {
+    font-size: 1.1rem;
+  }
+  .skills-info > div > p {
+    font-size: 0.75rem;
+  }
+  .language-box, .tool-box {
+    font-size: 0.75rem;
+    padding: 3px 10px;
+    border-radius: 5px;
+  }
+}
+
+@media (max-width: 576px) {
+  .profile-card {
+    flex-direction: column;
+  }
+  .school-info h2 {
+    font-size: 1.3rem;
+  }
+  .school-info h3 {
+    font-size: 0.8rem;
+  }
+  .school-info p {
+    font-size: 0.7rem;
+  }
+  .skills-info h3 {
+    font-size: 1rem;
+  }
+  .skills-info > div > p {
+    font-size: 0.7rem;
+  }
+  .language-box, .tool-box {
+    font-size: 0.7rem;
+    padding: 2px 8px;
+    border-radius: 5px;
+  }
+}
