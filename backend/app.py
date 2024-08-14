@@ -6,9 +6,9 @@ import torchvision.transforms as transforms
 from torch.utils.data import random_split, DataLoader
 from flask import Flask, jsonify, request
 from flask_cors import CORS
-from flask_socketio import SocketIO
 from flask_mail import Mail, Message
-import io
+from flask_socketio import SocketIO
+import io, os
 import base64
 from PIL import Image
 import threading
@@ -21,7 +21,7 @@ socketio = SocketIO(app, cors_allowed_origins="*")
 app.config['MAIL_SERVER']='live.smtp.mailtrap.io'
 app.config['MAIL_PORT'] = 587
 app.config['MAIL_USERNAME'] = 'api'
-app.config['MAIL_PASSWORD'] = '36439b9404b4b965db50939c42c3f98b'
+app.config['MAIL_PASSWORD'] = os.getenv('MAILTRAP_API_KEY')
 app.config['MAIL_USE_TLS'] = True
 app.config['MAIL_USE_SSL'] = False
 
