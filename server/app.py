@@ -89,6 +89,12 @@ def get_or_create_model(user_id):
     user_last_activity[user_id] = time.time()
     return user_models[user_id]
 
+@app.route('/heartbeat', methods=['POST'])
+def heartbeat():
+    user_id, _ = get_or_create_user_id()
+    user_last_activity[user_id] = time.time()
+    return jsonify({"message": "Heartbeat received"}), 200
+
 def cleanup_inactive_models():
     current_time = time.time()
     inactive_users = [user_id for user_id, last_activity in user_last_activity.items()
