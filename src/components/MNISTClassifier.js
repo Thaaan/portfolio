@@ -91,7 +91,7 @@ const MNISTClassifier = () => {
       // Attempt to reconnect after a delay
       setTimeout(() => {
         startSSEConnection();
-      }, 2000);  // Adjust the reconnection delay as needed
+      }, 2000);
     };
   }, []);
 
@@ -239,7 +239,6 @@ const MNISTClassifier = () => {
         ctx.beginPath();
         ctx.moveTo(lastPointRef.current.x, lastPointRef.current.y);
 
-        // Line interpolation
         const points = interpolatePoints(lastPointRef.current, newPoint);
         points.forEach(point => {
           ctx.lineTo(point.x, point.y);

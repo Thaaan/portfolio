@@ -71,7 +71,6 @@ const Contact = () => {
         setIsSubmitted(true);
         setFormData({ name: '', email: '', message: '' });
 
-        // Reset form after 3 seconds
         setTimeout(() => {
           setIsSubmitted(false);
         }, 3000);

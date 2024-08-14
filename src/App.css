@@ -67,7 +67,7 @@ section {
 .word {
   font-size: 4rem;
   margin: 0;
-  opacity: 0; /* Start with opacity 0 for animation */
+  opacity: 0;
   position: absolute;
 }
 

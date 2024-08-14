@@ -2,7 +2,6 @@
 @import '~slick-carousel/slick/slick.css';
 @import '~slick-carousel/slick/slick-theme.css';
 
-/* Additional styles for your carousel */
 .projects-carousel {
   width: 80%;
   margin: 0 auto;
@@ -35,11 +34,11 @@
 }
 
 .slick-prev {
-  left: -20px; /* Moved closer to the slider */
+  left: -20px;
 }
 
 .slick-next {
-  right: -20px; /* Moved closer to the slider */
+  right: -20px;
 }
 
 .slick-prev::before,
@@ -84,7 +83,6 @@
   transform: scale(1);
 }
 
-/* Modal styles */
 .modal {
   position: absolute;
   top: 50%;
@@ -217,7 +215,6 @@
   color: #949494;
 }
 
-/* Responsive styles */
 @media (max-width: 1200px) {
   .projects-carousel {
     width: 90%;
@@ -229,11 +226,11 @@
   }
 
   .slick-prev {
-    left: -15px; /* Adjusted for smaller screens */
+    left: -15px;
   }
 
   .slick-next {
-    right: -15px; /* Adjusted for smaller screens */
+    right: -15px;
   }
 }
 
@@ -253,11 +250,11 @@
   }
 
   .slick-prev {
-    left: -10px; /* Further adjusted for mobile screens */
+    left: -10px;
   }
 
   .slick-next {
-    right: -10px; /* Further adjusted for mobile screens */
+    right: -10px;
   }
 
   .modal-content {

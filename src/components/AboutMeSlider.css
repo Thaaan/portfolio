@@ -41,7 +41,7 @@
 .about-me-content {
   display: flex;
   justify-content: space-between;
-  align-items: flex-start; /* Changed to flex-start */
+  align-items: flex-start;
   opacity: 1;
 }
 
@@ -78,7 +78,7 @@
 .category-selector {
   display: flex;
   gap: 10px;
-  flex-wrap: wrap; /* Allow wrapping for small screens */
+  flex-wrap: wrap;
 }
 
 .category-button {

@@ -295,7 +295,6 @@
     color: #007bff;
   }
   
-  /* Responsive text scaling for intro section, terminal, and canvas view */
   @media (max-width: 1200px) {
     #intro .intro-text,
     #intro .intro-demo {

@@ -1,10 +1,10 @@
 .about-me-container {
   width: 100%;
   position: relative;
-  background-color: #1e1e2e; /* Updated to match dark background */
+  background-color: #1e1e2e;
   padding: 40px 20px;
   box-sizing: border-box;
-  color: #ffffff; /* Changed to white for better contrast */
+  color: #ffffff;
 }
 
 .about-me-content-wrapper {
@@ -23,7 +23,7 @@
 .about-me-title {
   font-size: 3rem;
   font-weight: 900;
-  color: #ffffff; /* Changed to white */
+  color: #ffffff;
   position: relative;
   margin: 0;
 }
@@ -33,7 +33,7 @@
   right: -30px;
   top: -10px;
   font-size: 1.5rem;
-  color: #7cb9e8; /* Kept light blue */
+  color: #7cb9e8;
 }
 
 .about-me-content {
@@ -59,13 +59,13 @@
 .about-me-text {
   width: 35%;
   padding-left: 20px;
-  color: #ffffff; /* Changed to white */
+  color: #ffffff;
 }
 
 .about-me-text h3 {
   font-size: 1.8rem;
   margin-bottom: 10px;
-  color: #7cb9e8; /* Kept light blue */
+  color: #7cb9e8;
 }
 
 .about-me-text p {
@@ -84,8 +84,8 @@
   padding: 8px 16px;
   border: none;
   border-radius: 20px;
-  background-color: #323248; /* Updated to match darker theme */
-  color: #ffffff; /* Changed to white */
+  background-color: #323248;
+  color: #ffffff;
   cursor: pointer;
   transition: all 0.3s ease;
   font-size: 0.9rem;
@@ -96,8 +96,8 @@
 }
 
 .category-button.active {
-  background-color: #7cb9e8; /* Kept light blue */
-  color: #1e1e2e; /* Dark background color for contrast */
+  background-color: #7cb9e8;
+  color: #1e1e2e;
 }
 
 .category-button:hover {
@@ -105,7 +105,6 @@
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
 }
 
-/* Menu Toggle and Icon */
 .menu-toggle {
   position: fixed;
   top: 3vh;
@@ -171,7 +170,6 @@
   transform: translateY(50%) rotate(-45deg);
 }
 
-/* Navigation Menu */
 .nav-menu {
   position: fixed;
   top: 0;
