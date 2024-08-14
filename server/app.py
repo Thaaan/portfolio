@@ -1,24 +1,23 @@
+from flask import Flask, jsonify, request, send_from_directory
+from flask_cors import CORS
+from flask_mail import Mail, Message
+from flask_socketio import SocketIO
+import io, os, base64
+from PIL import Image
+import threading
+import time
 import torch
 import torch.nn as nn
 import torch.optim as optim
 import torchvision
 import torchvision.transforms as transforms
 from torch.utils.data import random_split, DataLoader
-from flask import Flask, jsonify, request
-from flask_cors import CORS
-from flask_mail import Mail, Message
-from flask_socketio import SocketIO
-import io, os
-import base64
-from PIL import Image
-import threading
-import time
 
-app = Flask(__name__)
+app = Flask(__name__, static_folder="../client/build", static_url_path="/")
 CORS(app)
 socketio = SocketIO(app, cors_allowed_origins="*")
 
-app.config['MAIL_SERVER']='live.smtp.mailtrap.io'
+app.config['MAIL_SERVER'] = 'live.smtp.mailtrap.io'
 app.config['MAIL_PORT'] = 587
 app.config['MAIL_USERNAME'] = 'api'
 app.config['MAIL_PASSWORD'] = os.getenv('MAILTRAP_API_KEY')
@@ -65,7 +64,6 @@ def send_email():
         </html>
         """
 
-        # Plain text version as a fallback
         msg.body = f"""
         New Contact Form Submission
 
@@ -81,6 +79,15 @@ def send_email():
     except Exception as e:
         app.logger.error(f"Error sending email: {str(e)}")
         return jsonify({'error': str(e)}), 500
+
+# Serve React app
+@app.route('/', defaults={'path': ''})
+@app.route('/<path:path>')
+def serve_react_app(path):
+    if path != "" and os.path.exists(os.path.join(app.static_folder, path)):
+        return send_from_directory(app.static_folder, path)
+    else:
+        return send_from_directory(app.static_folder, 'index.html')
 
 # Slightly simplified CNN model
 class Net(nn.Module):
