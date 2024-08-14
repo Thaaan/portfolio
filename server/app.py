@@ -86,22 +86,28 @@ def send_email():
         app.logger.error(f"Error sending email: {str(e)}")
         return jsonify({'error': str(e)}), 500
 
-# Slightly simplified CNN model
+# Improved CNN model
 class Net(nn.Module):
     def __init__(self):
         super(Net, self).__init__()
-        self.conv1 = nn.Conv2d(1, 20, 5, 1)
-        self.conv2 = nn.Conv2d(20, 50, 5, 1)
-        self.fc1 = nn.Linear(4*4*50, 500)
-        self.fc2 = nn.Linear(500, 10)
+        self.conv1 = nn.Conv2d(1, 32, 3, 1)
+        self.conv2 = nn.Conv2d(32, 64, 3, 1)
+        self.dropout1 = nn.Dropout2d(0.25)
+        self.dropout2 = nn.Dropout2d(0.5)
+        self.fc1 = nn.Linear(9216, 128)
+        self.fc2 = nn.Linear(128, 10)
 
     def forward(self, x):
-        x = nn.functional.relu(self.conv1(x))
-        x = nn.functional.max_pool2d(x, 2, 2)
-        x = nn.functional.relu(self.conv2(x))
-        x = nn.functional.max_pool2d(x, 2, 2)
-        x = x.view(-1, 4*4*50)
-        x = nn.functional.relu(self.fc1(x))
+        x = self.conv1(x)
+        x = nn.functional.relu(x)
+        x = self.conv2(x)
+        x = nn.functional.relu(x)
+        x = nn.functional.max_pool2d(x, 2)
+        x = self.dropout1(x)
+        x = torch.flatten(x, 1)
+        x = self.fc1(x)
+        x = nn.functional.relu(x)
+        x = self.dropout2(x)
         x = self.fc2(x)
         return nn.functional.log_softmax(x, dim=1)
 
@@ -146,22 +152,21 @@ def train_model():
 
     full_dataset = torchvision.datasets.MNIST(root='./data', train=True, download=True, transform=transform)
     dataset_size = len(full_dataset)
-    reduced_size = int(0.1 * dataset_size)  # Use only 10% of the data
-    _, reduced_dataset = random_split(full_dataset, [dataset_size - reduced_size, reduced_size])
-
-    train_size = int(0.8 * reduced_size)
-    val_size = reduced_size - train_size
-    train_dataset, val_dataset = random_split(reduced_dataset, [train_size, val_size])
+    train_size = int(0.8 * dataset_size)
+    val_size = dataset_size - train_size
+    train_dataset, val_dataset = random_split(full_dataset, [train_size, val_size])
 
     train_loader = DataLoader(train_dataset, batch_size=64, shuffle=True, num_workers=0)
-    val_loader = DataLoader(val_dataset, batch_size=128, shuffle=False, num_workers=0)
+    val_loader = DataLoader(val_dataset, batch_size=1000, shuffle=False, num_workers=0)
 
     criterion = nn.CrossEntropyLoss()
     optimizer = optim.Adam(model.parameters(), lr=0.001)
     scheduler = optim.lr_scheduler.ReduceLROnPlateau(optimizer, 'min', patience=2, factor=0.5)
     early_stopping = EarlyStopping(patience=5, min_delta=0.001)
 
-    num_epochs = 3  # Reduced number of epochs
+    num_epochs = 10
+    best_accuracy = 0
+
     for epoch in range(num_epochs):
         model.train()
         running_loss = 0.0
@@ -200,6 +205,12 @@ def train_model():
         print(log_message)
         training_updates.put(log_message)
 
+        if accuracy > best_accuracy:
+            best_accuracy = accuracy
+            torch.save(model.state_dict(), 'best_model.pth')
+            print(f"New best model saved with accuracy: {best_accuracy:.2f}%")
+            training_updates.put(f"New best model saved with accuracy: {best_accuracy:.2f}%")
+
         scheduler.step(val_loss)
         early_stopping(val_loss)
         if early_stopping.early_stop:
@@ -209,9 +220,12 @@ def train_model():
 
     end_time = time.time()
     training_time = end_time - start_time
-    final_message = f'Finished Training. Total time: {training_time:.2f} seconds'
+    final_message = f'Finished Training. Total time: {training_time:.2f} seconds. Best accuracy: {best_accuracy:.2f}%'
     print(final_message)
     training_updates.put(final_message)
+
+    # Load the best model
+    model.load_state_dict(torch.load('best_model.pth'))
     model.eval()  # Set the model to evaluation mode
     model_trained.set()
     training_updates.put(None)  # Signal end of updates
@@ -236,6 +250,9 @@ def train_updates():
 
 @app.route('/predict', methods=['POST'])
 def predict():
+    if not model_trained.is_set():
+        return jsonify({"error": "Model is not trained yet"}), 400
+
     try:
         # Get the image data from the request
         image_data = request.json['image']
