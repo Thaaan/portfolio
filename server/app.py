@@ -1,7 +1,6 @@
-from flask import Flask, jsonify, request, send_from_directory, Response, session
+from flask import Flask, jsonify, request, send_from_directory, Response
 from flask_cors import CORS
 from flask_mail import Mail, Message
-from flask_session import Session
 import io, os, base64, time, threading, queue, uuid
 from PIL import Image
 import torch
@@ -10,7 +9,7 @@ import torch.optim as optim
 import torchvision
 import torchvision.transforms as transforms
 from torch.utils.data import random_split, DataLoader
-from threading import Timer, Lock
+from threading import Timer
 
 # Disable multiprocessing on Heroku
 if os.environ.get('DYNO'):
@@ -21,8 +20,6 @@ app = Flask(__name__, static_folder="../build", static_url_path="/")
 CORS(app, supports_credentials=True)
 
 app.config['SECRET_KEY'] = os.urandom(24)
-app.config['SESSION_TYPE'] = 'filesystem'
-Session(app)
 
 app.config['MAIL_SERVER'] = 'live.smtp.mailtrap.io'
 app.config['MAIL_PORT'] = 587
@@ -36,10 +33,6 @@ mail = Mail(app)
 user_models = {}
 user_last_activity = {}
 INACTIVE_THRESHOLD = 600
-
-# Create a lock for user_models and user_last_activity
-user_models_lock = Lock()
-user_last_activity_lock = Lock()
 
 class Net(nn.Module):
     def __init__(self):
@@ -68,75 +61,54 @@ class Net(nn.Module):
 device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 
 def get_or_create_user_id():
-    # Get the persistent token from the cookies
-    persistent_token = request.cookies.get('persistent_user_token')
+    # Retrieve the `user_id` from the cookie
+    user_id = request.cookies.get('user_id')
 
-    # Check if 'user_id' exists in the session
-    if 'user_id' in session:
-        # If persistent_token exists and is different from session user_id, synchronize them
-        if persistent_token and session['user_id'] != persistent_token:
-            # Option 1: Update session to match the persistent token
-            session['user_id'] = persistent_token
-        elif not persistent_token:
-            # Option 2: Update the persistent token to match the session user_id
-            response = jsonify({"message": "User ID synchronized"})
-            response.set_cookie('persistent_user_token', session['user_id'], max_age=30*24*60*60)
-            return session['user_id'], response
-    else:
-        # No user_id in session, check if persistent_token exists
-        if persistent_token:
-            session['user_id'] = persistent_token
-        else:
-            # Neither exists, create a new user_id
-            new_user_id = str(uuid.uuid4())
-            session['user_id'] = new_user_id
-            response = jsonify({"message": "New user ID created"})
-            response.set_cookie('persistent_user_token', new_user_id, max_age=30*24*60*60)  # 30 days
-            return new_user_id, response
+    # If `user_id` is not found, create a new one and set it in the cookie
+    if not user_id:
+        user_id = str(uuid.uuid4())
+        response = jsonify({"message": "New user ID created"})
+        response.set_cookie('user_id', user_id, max_age=30*24*60*60)  # Cookie lasts 30 days
+        return user_id, response
 
-    return session['user_id'], None
-
+    # If `user_id` is found, return it without creating a new response
+    return user_id, None
 
 def get_or_create_model(user_id):
-    with user_models_lock:
-        if user_id not in user_models:
-            model = Net().to(device)
-            user_models[user_id] = {
-                'model': model,
-                'trained': False,
-                'training_updates': queue.Queue()
-            }
-        with user_last_activity_lock:
-            user_last_activity[user_id] = time.time()
-        return user_models[user_id]
+    if user_id not in user_models:
+        model = Net().to(device)
+        user_models[user_id] = {
+            'model': model,
+            'trained': False,
+            'training_updates': queue.Queue()
+        }
+    user_last_activity[user_id] = time.time()
+    return user_models[user_id]
 
 @app.route('/heartbeat', methods=['POST'])
 def heartbeat():
     user_id, _ = get_or_create_user_id()
-    with user_last_activity_lock:
-        user_last_activity[user_id] = time.time()
+    user_last_activity[user_id] = time.time()
     return jsonify({"message": "Heartbeat received"}), 200
 
 def cleanup_inactive_models():
-    with user_models_lock:
-        with user_last_activity_lock:
-            current_time = time.time()
-            inactive_users = [user_id for user_id, last_activity in user_last_activity.items()
-                            if current_time - last_activity > INACTIVE_THRESHOLD]
+    current_time = time.time()
+    inactive_users = [user_id for user_id, last_activity in user_last_activity.items()
+                      if current_time - last_activity > INACTIVE_THRESHOLD]
 
-            for user_id in inactive_users:
-                if user_id in user_models:
-                    del user_models[user_id]
-                if user_id in user_last_activity:
-                    del user_last_activity[user_id]
+    for user_id in inactive_users:
+        if user_id in user_models:
+            del user_models[user_id]
+        if user_id in user_last_activity:
+            del user_last_activity[user_id]
 
-                # Delete the saved model file
-                model_path = f'best_model_{user_id}.pth'
-                if os.path.exists(model_path):
-                    os.remove(model_path)
-                    print(f"Removed model file: {model_path}")
+        # Delete the saved model file
+        model_path = f'best_model_{user_id}.pth'
+        if os.path.exists(model_path):
+            os.remove(model_path)
+            print(f"Removed model file: {model_path}")
 
-            print(f"Cleaned up {len(inactive_users)} inactive user models")
+    print(f"Cleaned up {len(inactive_users)} inactive user models")
 
     # Schedule the next cleanup
     Timer(INACTIVE_THRESHOLD, cleanup_inactive_models).start()
@@ -235,8 +207,7 @@ class EarlyStopping:
                 self.early_stop = True
 
 def train_model(user_id):
-    with user_models_lock:
-        user_data = user_models[user_id]
+    user_data = user_models[user_id]
     model = user_data['model']
     updates_queue = user_data['training_updates']
 
@@ -331,33 +302,27 @@ def train_model(user_id):
     # Load the best model
     model.load_state_dict(torch.load(f'best_model_{user_id}.pth'))
     model.eval()  # Set the model to evaluation mode
-    with user_models_lock:
-        user_data['trained'] = True
-    with user_last_activity_lock:
-        user_last_activity[user_id] = time.time()
+    user_data['trained'] = True
+    user_last_activity[user_id] = time.time()
     updates_queue.put(None)  # Signal end of updates
 
 @app.route('/train_updates')
 def train_updates():
     user_id, _ = get_or_create_user_id()
-    with user_models_lock:
-        if user_id not in user_models:
-            return jsonify({"error": "No active training session"}), 400
+    if user_id not in user_models:
+        return jsonify({"error": "No active training session"}), 400
 
-    with user_last_activity_lock:
-        user_last_activity[user_id] = time.time()
+    user_last_activity[user_id] = time.time()
 
     def generate():
-        with user_models_lock:
-            updates_queue = user_models[user_id]['training_updates']
+        updates_queue = user_models[user_id]['training_updates']
         while True:
             try:
                 update = updates_queue.get(timeout=20)  # 20-second timeout
                 if update is None:
                     break
                 yield f"data: {update}\n\n"
-                with user_last_activity_lock:
-                    user_last_activity[user_id] = time.time()
+                user_last_activity[user_id] = time.time()
             except queue.Empty:
                 yield ": keep-alive\n\n"
 
@@ -366,12 +331,10 @@ def train_updates():
 @app.route('/predict', methods=['POST'])
 def predict():
     user_id, _ = get_or_create_user_id()
-    with user_models_lock:
-        if user_id not in user_models:
-            return jsonify({"error": "No trained model found"}), 400
+    if user_id not in user_models:
+        return jsonify({"error": "No trained model found"}), 400
 
-    with user_last_activity_lock:
-        user_last_activity[user_id] = time.time()
+    user_last_activity[user_id] = time.time()
 
     try:
         # Get the image data from the request
@@ -390,8 +353,7 @@ def predict():
         image_tensor = transform(image).unsqueeze(0).to(device)
 
         # Make prediction
-        with user_models_lock:
-            user_data = user_models[user_id]
+        user_data = user_models[user_id]
         model = user_data['model']
         with torch.no_grad():
             output = model(image_tensor)
