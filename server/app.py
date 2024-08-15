@@ -422,6 +422,19 @@ def cleanup_inactive_models():
 # Start the cleanup cycle
 cleanup_inactive_models()
 
+def clear_redis():
+    try:
+        # Clear only keys related to this application
+        for key in redis_client.scan_iter("model_*"):
+            redis_client.delete(key)
+        redis_client.delete('user_last_activity')
+        print("Application-specific Redis data cleared successfully")
+    except redis.RedisError as e:
+        print(f"Error clearing Redis data: {e}")
+
+#clear redis on deployment
+clear_redis()
+
 if __name__ == '__main__':
     print("Starting Flask server...")
     port = int(os.environ.get("PORT", 5000))
