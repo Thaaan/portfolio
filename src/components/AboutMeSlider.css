@@ -7,6 +7,36 @@
   align-items: center;
   color: #ffffff;
   min-height: 80vh;
+  cursor: default;
+}
+
+.navigation-overlay {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  width: 25%;
+  z-index: 10;
+  cursor: pointer;
+  transition: opacity 1s ease;
+  opacity: 0;
+}
+
+.left-overlay {
+  left: 0;
+  background: linear-gradient(to right, rgba(255, 255, 255, 0.1), transparent);
+}
+
+.left-overlay:hover {
+  opacity: .75;
+}
+
+.right-overlay {
+  right: 0;
+  background: linear-gradient(to left, rgba(255, 255, 255, 0.1), transparent);
+}
+
+.right-overlay:hover {
+  opacity: .75;
 }
 
 .about-me-content-wrapper {

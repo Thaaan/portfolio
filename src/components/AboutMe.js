@@ -150,27 +150,32 @@ const AboutMeSlider = () => {
       .to([image, text], { x: 0, opacity: 1, stagger: 0.1 }, "-=0.4");
   };
 
+  const handleNavigation = (direction) => {
+    const now = Date.now();
+    if (now - lastScrollTime.current < scrollCooldown) {
+      return;
+    }
+    lastScrollTime.current = now;
+
+    if (isAnimating) {
+      return;
+    }
+    const newIndex = (currentIndex + direction + categories[category].length) % categories[category].length;
+    animateContent(direction, newIndex);
+  };
+
   useEffect(() => {
     const container = containerRef.current;
 
-    const handleNavigation = (direction) => {
-      const now = Date.now();
-      if (now - lastScrollTime.current < scrollCooldown) return;
-      lastScrollTime.current = now;
-
-      if (isAnimating) return;
-      const newIndex = (currentIndex + direction + categories[category].length) % categories[category].length;
-      animateContent(direction, newIndex);
-    };
-
     const observer = Observer.create({
       target: container,
-      type: "wheel,touch,pointer",
+      type: "wheel",
       wheelSpeed: -1,
-      onDown: () => handleNavigation(-1),
-      onUp: () => handleNavigation(1),
-      tolerance: 10,
-      preventDefault: true,
+      onWheel: (e) => {
+        if (Math.abs(e.deltaX) > Math.abs(e.deltaY)) {
+          handleNavigation(e.deltaX > 0 ? -1 : 1);
+        }
+      },
     });
 
     return () => {
@@ -209,6 +214,8 @@ const AboutMeSlider = () => {
 
   return (
     <div ref={containerRef} className="about-me-container" id="about">
+      <div className="navigation-overlay left-overlay" onClick={() => handleNavigation(-1)}></div>
+      <div className="navigation-overlay right-overlay" onClick={() => handleNavigation(1)}></div>
       <div className="about-me-content-wrapper">
         <div className="about-me-header">
           <h2 ref={titleRef} className="about-me-title">
