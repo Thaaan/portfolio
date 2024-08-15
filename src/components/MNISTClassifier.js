@@ -147,6 +147,7 @@ const MNISTClassifier = () => {
         <div className="terminal-title">MNIST Digit Classifier Training</div>
       </div>
       <div className="terminal-container" ref={terminalRef} onScroll={(e) => e.stopPropagation()}>
+        <div className="terminal-log">Type "start training model" to begin training.</div>
         {commandHistory.map((cmd, index) => (
           <div key={index} className="terminal-command">
             <span className="terminal-prompt">$</span>
