@@ -5,6 +5,11 @@ import { GraduationCap, Briefcase, Monitor, Camera } from 'lucide-react';
 
 import './AboutMeSlider.css';
 
+import cs61b from './../img/coursework/cs61b.png'
+import cs61c from './../img/coursework/cs61c.jpg'
+import cs70 from './../img/coursework/cs70.jpg'
+import stat134 from './../img/coursework/stat134.png'
+
 gsap.registerPlugin(Observer);
 
 const AboutMeSlider = () => {
@@ -25,27 +30,17 @@ const AboutMeSlider = () => {
       {
         title: "CS61B: Data Structures",
         content: "Covers the implementation and analysis of data structures, including lists, queues, trees, and graphs, along with algorithms for sorting and searching.",
-        image: "https://via.placeholder.com/800x300.png?text=CS61B+Data+Structures"
+        image: cs61b
       },
       {
         title: "CS61C: Machine Structures",
         content: "Introduction to computer architecture, focusing on the relationship between hardware and software. Topics include assembly language, caching, pipelining, and parallel processing.",
-        image: "https://via.placeholder.com/800x300.png?text=CS61C+Machine+Structures"
+        image: cs61c
       },
       {
-        title: "DATA100: Principles and Techniques of Data Science",
-        content: "Combines inferential thinking, computational thinking, and real-world relevance to teach the data science process end-to-end.",
-        image: "https://via.placeholder.com/800x300.png?text=DATA100+Data+Science"
-      },
-      {
-        title: "CS70: Discrete Mathematics and Probability Theory",
-        content: "Focuses on fundamental concepts in discrete mathematics and probability theory, including combinatorics, graph theory, and random variables.",
-        image: "https://via.placeholder.com/800x300.png?text=CS70+Discrete+Mathematics"
-      },
-      {
-        title: "STAT134: Concepts of Probability",
-        content: "Introduction to probability theory, including distributions, expectation, and the law of large numbers.",
-        image: "https://via.placeholder.com/800x300.png?text=STAT134+Probability"
+        title: "CS161: Computer Security",
+        content: "Introduction to computer security, including cryptography, network security, and the analysis of vulnerabilities and defenses.",
+        image: "https://via.placeholder.com/800x300.png?text=CS161+Computer+Security"
       },
       {
         title: "EECS127: Optimization Models in Engineering",
@@ -58,14 +53,24 @@ const AboutMeSlider = () => {
         image: "https://via.placeholder.com/800x300.png?text=CS170+Algorithms"
       },
       {
+        title: "DATA100: Principles and Techniques of Data Science",
+        content: "Combines inferential thinking, computational thinking, and real-world relevance to teach the data science process end-to-end.",
+        image: "https://via.placeholder.com/800x300.png?text=DATA100+Data+Science"
+      },
+      {
+        title: "CS70: Discrete Mathematics and Probability Theory",
+        content: "Focuses on fundamental concepts in discrete mathematics and probability theory, including combinatorics, graph theory, and random variables.",
+        image: cs70
+      },
+      {
+        title: "STAT134: Concepts of Probability",
+        content: "Introduction to probability theory, including distributions, expectation, and the law of large numbers.",
+        image: stat134
+      },
+      {
         title: "STAT135: Concepts of Statistics",
         content: "Covers fundamental statistical concepts, including hypothesis testing, regression, and analysis of variance.",
         image: "https://via.placeholder.com/800x300.png?text=STAT135+Statistics"
-      },
-      {
-        title: "CS161: Computer Security",
-        content: "Introduction to computer security, including cryptography, network security, and the analysis of vulnerabilities and defenses.",
-        image: "https://via.placeholder.com/800x300.png?text=CS161+Computer+Security"
       },
       {
         title: "Web Design Decal",

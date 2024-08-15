@@ -239,7 +239,6 @@ def predict():
         # Load model from Redis
         model = load_model_from_redis(user_id)
 
-        # Get the image data from the request
         image_data = request.json['image']
 
         # Decode the base64 image
@@ -391,10 +390,15 @@ def cleanup_inactive_models():
     try:
         all_user_activities = redis_client.hgetall('user_last_activity')
         print(f"Found {len(all_user_activities)} user activities")
-        inactive_users = [
-            user_id for user_id, last_activity in all_user_activities.items()
-            if current_time - string_to_timestamp(last_activity.decode('utf-8')) > INACTIVE_THRESHOLD
-        ]
+
+        inactive_users = []
+        for user_id, last_activity in all_user_activities.items():
+            last_activity_time = string_to_timestamp(last_activity.decode('utf-8'))
+            time_difference = current_time - last_activity_time
+            print(f"User {user_id}: Last activity at {last_activity_time}, Time difference: {time_difference}")
+            if time_difference > INACTIVE_THRESHOLD:
+                inactive_users.append(user_id)
+
         print(f"Identified {len(inactive_users)} inactive users")
 
         for user_id in inactive_users:
@@ -419,12 +423,10 @@ def cleanup_inactive_models():
     # Schedule the next cleanup
     Timer(INACTIVE_THRESHOLD, cleanup_inactive_models).start()
 
-# Start the cleanup cycle
 cleanup_inactive_models()
 
 def clear_redis():
     try:
-        # Clear only keys related to this application
         for key in redis_client.scan_iter("model_*"):
             redis_client.delete(key)
         redis_client.delete('user_last_activity')
