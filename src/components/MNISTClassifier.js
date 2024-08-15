@@ -39,20 +39,20 @@ const MNISTClassifier = () => {
   const eventSourceRef = useRef(null);
 
   //send heartbeat to confirm user is still active
-  useEffect(() => {
-    const heartbeatInterval = setInterval(() => {
-      fetch(`${API_URL}/heartbeat`, {
-        method: 'POST',
-        credentials: 'include'
-      }).catch((error) => {
-        console.error('Heartbeat error:', error);
-      });
-    }, 60000);
+  // useEffect(() => {
+  //   const heartbeatInterval = setInterval(() => {
+  //     fetch(`${API_URL}/heartbeat`, {
+  //       method: 'POST',
+  //       credentials: 'include'
+  //     }).catch((error) => {
+  //       console.error('Heartbeat error:', error);
+  //     });
+  //   }, 60000);
 
-    return () => {
-      clearInterval(heartbeatInterval);
-    };
-  }, []);
+  //   return () => {
+  //     clearInterval(heartbeatInterval);
+  //   };
+  // }, []);
 
   useEffect(() => {
     if (terminalRef.current) {
