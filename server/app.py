@@ -37,7 +37,7 @@ mail = Mail(app)
 redis_url = os.getenv('REDIS_URL')
 redis_client = redis.from_url(redis_url)
 
-INACTIVE_THRESHOLD = 600
+INACTIVE_THRESHOLD = 60
 
 device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 
