@@ -123,6 +123,7 @@
   transition: all 0.3s ease;
   font-size: 0.9rem;
   font-weight: 550;
+  z-index: 30;
 }
 
 .category-button span {
