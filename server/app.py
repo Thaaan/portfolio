@@ -1,8 +1,13 @@
 import os
+import io
+import base64
+import time
+import threading
+import uuid
+from datetime import datetime
 from flask import Flask, jsonify, request, send_from_directory, Response
 from flask_cors import CORS
 from flask_mail import Mail, Message
-import io, base64, time, threading, queue, uuid
 from PIL import Image
 import torch
 import torch.nn as nn
@@ -13,7 +18,6 @@ from torch.utils.data import random_split, DataLoader
 from threading import Timer
 import redis
 import json
-from datetime import datetime
 
 # Disable multiprocessing on Heroku
 if os.environ.get('DYNO'):
@@ -37,7 +41,7 @@ mail = Mail(app)
 redis_url = os.getenv('REDIS_URL')
 redis_client = redis.from_url(redis_url)
 
-INACTIVE_THRESHOLD = 60
+INACTIVE_THRESHOLD = 600
 
 device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 
@@ -64,6 +68,16 @@ class Net(nn.Module):
         x = self.dropout2(x)
         x = self.fc2(x)
         return nn.functional.log_softmax(x, dim=1)
+
+# Timestamp handling functions
+def get_current_timestamp():
+    return time.time()
+
+def timestamp_to_string(timestamp):
+    return str(timestamp)
+
+def string_to_timestamp(timestamp_string):
+    return float(timestamp_string)
 
 # Model management functions
 def save_model_to_redis(user_id, model):
@@ -94,7 +108,8 @@ def load_model_from_redis(user_id):
 # User management
 def update_user_activity(user_id):
     try:
-        redis_client.hset('user_last_activity', user_id, json.dumps(datetime.now().timestamp()))
+        current_time = get_current_timestamp()
+        redis_client.hset('user_last_activity', user_id, timestamp_to_string(current_time))
     except redis.RedisError as e:
         print(f"Error updating user activity in Redis: {e}")
 
@@ -102,7 +117,7 @@ def get_user_last_activity(user_id):
     try:
         last_activity = redis_client.hget('user_last_activity', user_id)
         if last_activity:
-            return json.loads(last_activity)
+            return string_to_timestamp(last_activity.decode('utf-8'))
         return None
     except redis.RedisError as e:
         print(f"Error getting user activity from Redis: {e}")
@@ -117,7 +132,7 @@ def get_or_create_user_id():
         return user_id, response
     return user_id, None
 
-#queue management
+# Queue management
 def enqueue_update(user_id, update):
     redis_client.rpush(f'updates_{user_id}', json.dumps(update))
 
@@ -265,7 +280,7 @@ class EarlyStopping:
     def __call__(self, val_loss):
         if self.best_loss is None:
             self.best_loss = val_loss
-        elif self.best_loss - val_loss > self.min_delta:
+        elif self.best_loss - val_loss >= self.min_delta:  # Changed > to >=
             self.best_loss = val_loss
             self.counter = 0
         else:
@@ -371,23 +386,32 @@ def train_model(user_id):
     enqueue_update(user_id, None)  # Signal end of updates
 
 def cleanup_inactive_models():
-    current_time = datetime.now().timestamp()
+    current_time = get_current_timestamp()
+    print(f"Starting cleanup at {current_time}")
     try:
         all_user_activities = redis_client.hgetall('user_last_activity')
+        print(f"Found {len(all_user_activities)} user activities")
         inactive_users = [
             user_id for user_id, last_activity in all_user_activities.items()
-            if current_time - json.loads(last_activity.decode('utf-8')) > INACTIVE_THRESHOLD
+            if current_time - string_to_timestamp(last_activity.decode('utf-8')) > INACTIVE_THRESHOLD
         ]
+        print(f"Identified {len(inactive_users)} inactive users")
 
         for user_id in inactive_users:
             try:
-                redis_client.delete(f'model_{user_id}')
+                model_key = f'model_{user_id}'
+                if redis_client.exists(model_key):
+                    redis_client.delete(model_key)
+                    print(f"Deleted model for user {user_id}")
+                else:
+                    print(f"No model found for user {user_id}")
+
                 redis_client.hdel('user_last_activity', user_id)
-                print(f"Deleted inactive model and activity for user {user_id} from Redis")
+                print(f"Deleted activity for user {user_id}")
             except redis.RedisError as e:
                 print(f"Error deleting data for user {user_id} from Redis: {e}")
 
-        print(f"Cleaned up {len(inactive_users)} inactive user models")
+        print(f"Cleanup completed. Processed {len(inactive_users)} inactive users")
 
     except redis.RedisError as e:
         print(f"Error during cleanup: {e}")
