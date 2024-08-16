@@ -83,7 +83,7 @@
 
 .about-me-image img {
   width: 100%;
-  height: 400px;
+  max-height: 400px;
   object-fit: cover;
   border-radius: 10px;
 }
@@ -162,6 +162,10 @@
   .about-me-text {
     width: 100%;
     padding-left: 0;
+  }
+
+  .about-me-image img {
+    max-height: 300px;
   }
 
   .about-me-text {

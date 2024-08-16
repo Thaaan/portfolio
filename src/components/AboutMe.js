@@ -10,6 +10,13 @@ import cs61c from './../img/coursework/cs61c.jpg'
 import cs70 from './../img/coursework/cs70.jpg'
 import stat134 from './../img/coursework/stat134.png'
 import wdd from './../img/coursework/wdd.png'
+import eecs127 from './../img/coursework/eecs127.png'
+import data100 from './../img/coursework/data100.png'
+import cs170 from './../img/coursework/cs170.png'
+import cs161 from './../img/coursework/cs161.png'
+import stat135 from './../img/coursework/stat135.png'
+import appcensus from './../img/coursework/appcensus.png'
+import radwatch from './../img/coursework/radwatch.jpg'
 
 gsap.registerPlugin(Observer);
 
@@ -41,22 +48,22 @@ const AboutMeSlider = () => {
       {
         title: "CS161: Computer Security",
         content: "Introduction to computer security, including cryptography, network security, and the analysis of vulnerabilities and defenses.",
-        image: "https://via.placeholder.com/800x300.png?text=CS161+Computer+Security"
+        image: cs161
       },
       {
         title: "EECS127: Optimization Models in Engineering",
         content: "Introduction to optimization techniques and their applications in engineering, covering linear, nonlinear, and integer programming.",
-        image: "https://via.placeholder.com/800x300.png?text=EECS127+Optimization+Models"
+        image: eecs127
       },
       {
         title: "CS170: Efficient Algorithms and Intractable Problems",
         content: "Studies algorithm design and analysis, including graph algorithms, dynamic programming, and NP-completeness.",
-        image: "https://via.placeholder.com/800x300.png?text=CS170+Algorithms"
+        image: cs170
       },
       {
         title: "DATA100: Principles and Techniques of Data Science",
         content: "Combines inferential thinking, computational thinking, and real-world relevance to teach the data science process end-to-end.",
-        image: "https://via.placeholder.com/800x300.png?text=DATA100+Data+Science"
+        image: data100
       },
       {
         title: "CS70: Discrete Mathematics and Probability Theory",
@@ -71,7 +78,7 @@ const AboutMeSlider = () => {
       {
         title: "STAT135: Concepts of Statistics",
         content: "Covers fundamental statistical concepts, including hypothesis testing, regression, and analysis of variance.",
-        image: "https://via.placeholder.com/800x300.png?text=STAT135+Statistics"
+        image: stat135
       },
       {
         title: "Web Design Decal",
@@ -83,12 +90,12 @@ const AboutMeSlider = () => {
       {
         title: "Software Developer at AppCensus",
         content: "Developed data scraping and analysis tools to enhance the company's cybersecurity database, focusing on extracting and organizing relevant information from applications.",
-        image: "https://via.placeholder.com/800x300.png?text=Software+Developer+at+AppCensus"
+        image: appcensus
       },
       {
         title: "Research Assistant at UC Berkeley Radwatch",
         content: "Utilized Raspberry Pi devices to study the inverse square law for radiation, contributing to the development of radiation detection and measurement tools.",
-        image: "https://via.placeholder.com/800x300.png?text=UC+Berkeley+Radwatch"
+        image: radwatch
       }
     ],
     hobbies: [

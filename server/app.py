@@ -384,7 +384,14 @@ def train_model(user_id):
     update_user_activity(user_id)
     enqueue_update(user_id, None)  # Signal end of updates
 
+cleanup_in_progress = Event()
+
 def cleanup_inactive_models():
+    if cleanup_in_progress.is_set():
+        print("Cleanup already in progress, skipping this run")
+        return
+
+    cleanup_in_progress.set()
     current_time = get_current_timestamp()
     print(f"Starting cleanup at {current_time}")
     try:
@@ -425,11 +432,15 @@ def cleanup_inactive_models():
 
     except redis.RedisError as e:
         print(f"Error during cleanup: {e}")
+    finally:
+        cleanup_in_progress.clear()
 
     # Schedule the next cleanup
     Timer(INACTIVE_THRESHOLD, cleanup_inactive_models).start()
 
-cleanup_inactive_models()
+def start_cleanup_cycle():
+    print("Starting cleanup cycle...")
+    Timer(INACTIVE_THRESHOLD, cleanup_inactive_models).start()
 
 def clear_redis():
     try:
@@ -440,10 +451,10 @@ def clear_redis():
     except redis.RedisError as e:
         print(f"Error clearing Redis data: {e}")
 
-#clear redis on deployment
-clear_redis()
-
 if __name__ == '__main__':
     print("Starting Flask server...")
+    # Start the cleanup cycle
+    clear_redis()
+    start_cleanup_cycle()
     port = int(os.environ.get("PORT", 5000))
     app.run(host='0.0.0.0', port=port)
