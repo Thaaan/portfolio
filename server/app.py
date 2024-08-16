@@ -393,6 +393,7 @@ def cleanup_inactive_models():
 
         inactive_users = []
         for user_id, last_activity in all_user_activities.items():
+            user_id = user_id.decode('utf-8')  # Decode bytes to string
             last_activity_time = string_to_timestamp(last_activity.decode('utf-8'))
             time_difference = current_time - last_activity_time
             print(f"User {user_id}: Last activity at {last_activity_time}, Time difference: {time_difference}")
@@ -405,13 +406,18 @@ def cleanup_inactive_models():
             try:
                 model_key = f'model_{user_id}'
                 if redis_client.exists(model_key):
-                    redis_client.delete(model_key)
-                    print(f"Deleted model for user {user_id}")
+                    result = redis_client.delete(model_key)
+                    print(f"Attempted to delete model for user {user_id}. Result: {result}")
+                    # Check if the model was actually deleted
+                    if redis_client.exists(model_key):
+                        print(f"WARNING: Model for user {user_id} still exists after deletion attempt")
+                    else:
+                        print(f"Confirmed: Model for user {user_id} has been deleted")
                 else:
                     print(f"No model found for user {user_id}")
 
-                redis_client.hdel('user_last_activity', user_id)
-                print(f"Deleted activity for user {user_id}")
+                result = redis_client.hdel('user_last_activity', user_id)
+                print(f"Attempted to delete activity for user {user_id}. Result: {result}")
             except redis.RedisError as e:
                 print(f"Error deleting data for user {user_id} from Redis: {e}")
 

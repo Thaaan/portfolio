@@ -9,6 +9,7 @@ import cs61b from './../img/coursework/cs61b.png'
 import cs61c from './../img/coursework/cs61c.jpg'
 import cs70 from './../img/coursework/cs70.jpg'
 import stat134 from './../img/coursework/stat134.png'
+import wdd from './../img/coursework/wdd.png'
 
 gsap.registerPlugin(Observer);
 
@@ -75,8 +76,7 @@ const AboutMeSlider = () => {
       {
         title: "Web Design Decal",
         content: "A student-run course that teaches the fundamentals of web design, covering topics such as HTML, CSS, and JavaScript, with a focus on hands-on projects.",
-        image: "https://via.placeholder.com/800x300.png?text=Web+Design+Decal",
-        link: "https://webdesigndecal.github.io/"
+        image: wdd
       }
     ],
     experience: [
