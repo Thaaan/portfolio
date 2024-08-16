@@ -142,6 +142,9 @@ def dequeue_update(user_id):
         return json.loads(update[1])
     return None
 
+def clear_training_logs(user_id):
+    redis_client.delete(f'updates_{user_id}')
+
 # Routes
 @app.route('/email', methods=['POST'])
 def send_email():
@@ -196,6 +199,7 @@ def train():
     update_user_activity(user_id)
 
     try:
+        clear_training_logs(user_id)
         # Check if model already exists in Redis
         if redis_client.exists(f'model_{user_id}'):
             result = {"message": "Model already trained"}
