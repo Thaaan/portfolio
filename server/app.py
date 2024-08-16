@@ -451,10 +451,10 @@ def clear_redis():
     except redis.RedisError as e:
         print(f"Error clearing Redis data: {e}")
 
+clear_redis()
+start_cleanup_cycle()
+
 if __name__ == '__main__':
     print("Starting Flask server...")
-    # Start the cleanup cycle
-    clear_redis()
-    start_cleanup_cycle()
     port = int(os.environ.get("PORT", 5000))
     app.run(host='0.0.0.0', port=port)

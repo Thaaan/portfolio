@@ -98,6 +98,7 @@ const MNISTClassifier = () => {
   const startTraining = async () => {
     dispatch({ type: 'SET_LOADING', payload: true });
     dispatch({ type: 'RESET_LOGS' });
+    dispatch({ type: 'SET_TRAINING_STATUS', payload: 'training' });
     setInputVisible(false);
     try {
       const response = await fetch(`${API_URL}/train`, {
