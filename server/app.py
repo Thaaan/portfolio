@@ -384,7 +384,7 @@ def train_model(user_id):
     update_user_activity(user_id)
     enqueue_update(user_id, None)  # Signal end of updates
 
-cleanup_in_progress = Event()
+cleanup_in_progress = threading.Event()
 
 def cleanup_inactive_models():
     if cleanup_in_progress.is_set():
