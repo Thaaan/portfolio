@@ -25,6 +25,7 @@ const Intro = () => {
               <img src={link.icon} alt={link.name} />
             </a>
           ))}
+          <a className="resume-link" href="https://ethirwin-portfolio-assets.s3.us-east-2.amazonaws.com/Resume.pdf" target="_blank" rel="noopener noreferrer">Resume</a>
         </div>
       </div>
       <div className="intro-demo">

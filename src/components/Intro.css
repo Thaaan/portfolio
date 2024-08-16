@@ -1,3 +1,5 @@
+@import url('https://fonts.googleapis.com/css2?family=Kanit:wght@200..700&display=swap');
+
 #intro {
     background-color: #f0f0f0;
     display: flex;
@@ -44,8 +46,21 @@
     overflow: hidden;
     transition: transform 0.3s ease;
   }
+
+  .resume-link {
+    border-radius: 6px;
+    padding: 10px;
+    background: black;
+    color: white;
+    font-weight: 1000;
+    line-height: 20px;
+    transition: transform 0.3s ease;
+    cursor: pointer;
+    text-decoration: none;
+    font-family: Kanit, sans-serif;
+  }
   
-  .social-icon:hover {
+  .resume-link:hover, .social-icon:hover {
     transform: scale(1.1);
   }
   
