@@ -450,6 +450,8 @@ def clear_redis():
     try:
         for key in redis_client.scan_iter("model_*"):
             redis_client.delete(key)
+        for key in redis_client.scan_iter("updates_*"):
+            redis_client.delete(key)
         redis_client.delete('user_last_activity')
         print("Application-specific Redis data cleared successfully")
     except redis.RedisError as e:
