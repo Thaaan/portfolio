@@ -316,7 +316,7 @@ const MNISTClassifier = () => {
         });
 
         if (!response.ok) {
-          throw new Error('Failed to classify digit');
+          throw new Error('Failed to classify digit, reload the page');
         }
 
         const data = await response.json();
