@@ -31,6 +31,7 @@ const AboutMeSlider = () => {
   const textRef = useRef(null);
   const lastScrollTime = useRef(0);
   const scrollCooldown = 500; // ms
+  const touchStartX = useRef(null);
 
   const categories = {
     coursework: [
@@ -156,8 +157,30 @@ const AboutMeSlider = () => {
       },
     });
 
+    const handleTouchStart = (e) => {
+      touchStartX.current = e.touches[0].clientX;
+    };
+
+    const handleTouchEnd = (e) => {
+      if (touchStartX.current === null) return;
+
+      const touchEndX = e.changedTouches[0].clientX;
+      const diff = touchStartX.current - touchEndX;
+
+      if (Math.abs(diff) > 50) { // Adjust this threshold as needed
+        handleNavigation(diff > 0 ? 1 : -1);
+      }
+
+      touchStartX.current = null;
+    };
+
+    container.addEventListener('touchstart', handleTouchStart);
+    container.addEventListener('touchend', handleTouchEnd);
+
     return () => {
       observer.kill();
+      container.removeEventListener('touchstart', handleTouchStart);
+      container.removeEventListener('touchend', handleTouchEnd);
     };
   }, [category, currentIndex, categories, isAnimating]);
 
