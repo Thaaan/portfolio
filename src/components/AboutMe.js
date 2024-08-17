@@ -1,11 +1,23 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { gsap } from 'gsap';
 import { Observer } from 'gsap/Observer';
-import { GraduationCap, Briefcase, Monitor, Camera } from 'lucide-react';
+import { GraduationCap, Briefcase } from 'lucide-react';
 
 import './AboutMeSlider.css';
 
 gsap.registerPlugin(Observer);
+
+const WebsitePreview = ({ url }) => {
+  return (
+    <iframe
+      src={url}
+      title="Website Preview"
+      width="100%"
+      height="100%"
+      style={{ border: 'none' }}
+    />
+  );
+};
 
 const AboutMeSlider = () => {
   const [category, setCategory] = useState('coursework');
@@ -15,7 +27,7 @@ const AboutMeSlider = () => {
   const contentRef = useRef(null);
   const titleRef = useRef(null);
   const numberRef = useRef(null);
-  const imageRef = useRef(null);
+  const previewRef = useRef(null);
   const textRef = useRef(null);
   const lastScrollTime = useRef(0);
   const scrollCooldown = 500; // ms
@@ -25,94 +37,75 @@ const AboutMeSlider = () => {
       {
         title: "CS61B: Data Structures",
         content: "Covers the implementation and analysis of data structures, including lists, queues, trees, and graphs, along with algorithms for sorting and searching.",
-        image: "https://ethirwin-portfolio-assets.s3.us-east-2.amazonaws.com/img/coursework/cs61b.png"
+        url: "https://sp24.datastructur.es/"
       },
       {
         title: "CS61C: Machine Structures",
         content: "Introduction to computer architecture, focusing on the relationship between hardware and software. Topics include assembly language, caching, pipelining, and parallel processing.",
-        image: "https://ethirwin-portfolio-assets.s3.us-east-2.amazonaws.com/img/coursework/cs61c.jpg"
+        url: "https://cs61c.org/"
       },
       {
         title: "CS161: Computer Security",
         content: "Introduction to computer security, including cryptography, network security, and the analysis of vulnerabilities and defenses.",
-        image: "https://ethirwin-portfolio-assets.s3.us-east-2.amazonaws.com/img/coursework/cs161.png"
+        url: "https://fa24.cs161.org/"
       },
       {
         title: "EECS127: Optimization Models in Engineering",
         content: "Introduction to optimization techniques and their applications in engineering, covering linear, nonlinear, and integer programming.",
-        image: "https://ethirwin-portfolio-assets.s3.us-east-2.amazonaws.com/img/coursework/eecs127.png"
+        url: "https://www2.eecs.berkeley.edu/Courses/EECS127/"
       },
       {
         title: "CS170: Efficient Algorithms and Intractable Problems",
         content: "Studies algorithm design and analysis, including graph algorithms, dynamic programming, and NP-completeness.",
-        image: "https://ethirwin-portfolio-assets.s3.us-east-2.amazonaws.com/img/coursework/cs170.png"
+        url: "https://cs170.org/"
       },
       {
         title: "DATA100: Principles and Techniques of Data Science",
         content: "Combines inferential thinking, computational thinking, and real-world relevance to teach the data science process end-to-end.",
-        image: "https://ethirwin-portfolio-assets.s3.us-east-2.amazonaws.com/img/coursework/data100.png"
+        url: "https://ds100.org/"
       },
       {
         title: "CS70: Discrete Mathematics and Probability Theory",
         content: "Focuses on fundamental concepts in discrete mathematics and probability theory, including combinatorics, graph theory, and random variables.",
-        image: "https://ethirwin-portfolio-assets.s3.us-east-2.amazonaws.com/img/coursework/cs70.jpg"
+        url: "https://www.eecs70.org/"
       },
       {
         title: "STAT134: Concepts of Probability",
         content: "Introduction to probability theory, including distributions, expectation, and the law of large numbers.",
-        image: "https://ethirwin-portfolio-assets.s3.us-east-2.amazonaws.com/img/coursework/stat134.png"
+        url: "https://www.stat134.org/"
       },
       {
         title: "STAT135: Concepts of Statistics",
         content: "Covers fundamental statistical concepts, including hypothesis testing, regression, and analysis of variance.",
-        image: "https://ethirwin-portfolio-assets.s3.us-east-2.amazonaws.com/img/coursework/stat135.png"
+        url: "https://classes.berkeley.edu/content/2024-fall-stat-135-001-lec-001"
       },
       {
         title: "Web Design Decal",
         content: "A student-run course that teaches the fundamentals of web design, covering topics such as HTML, CSS, and JavaScript, with a focus on hands-on projects.",
-        image: "https://ethirwin-portfolio-assets.s3.us-east-2.amazonaws.com/img/coursework/wdd.png"
+        url: "https://webdesigndecal.github.io/"
       }
     ],
     experience: [
       {
         title: "Software Developer at AppCensus",
         content: "Developed data scraping and analysis tools to enhance the company's cybersecurity database, focusing on extracting and organizing relevant information from applications.",
-        image: "https://ethirwin-portfolio-assets.s3.us-east-2.amazonaws.com/img/coursework/appcensus.png"
+        url: "https://www.appcensus.io/"
       },
       {
         title: "Research Assistant at UC Berkeley Radwatch",
         content: "Utilized Raspberry Pi devices to study the inverse square law for radiation, contributing to the development of radiation detection and measurement tools.",
-        image: "https://ethirwin-portfolio-assets.s3.us-east-2.amazonaws.com/img/coursework/radwatch.jpg"
+        url: "https://radwatch.berkeley.edu/"
       }
     ]
   };
-
-  const preloadImages = (index) => {
-    const currentCategory = categories[category];
-    const imagesToPreload = [
-      currentCategory[(index - 1 + currentCategory.length) % currentCategory.length].image,
-      currentCategory[index].image,
-      currentCategory[(index + 1) % currentCategory.length].image
-    ];
-
-    imagesToPreload.forEach(src => {
-      const img = new Image();
-      img.src = src;
-    });
-  };
-
-  useEffect(() => {
-    preloadImages(currentIndex);
-  }, [category, currentIndex]);
 
   const animateContent = (direction, newIndex) => {
     if (isAnimating) return;
     setIsAnimating(true);
 
-    const content = contentRef.current;
     const title = titleRef.current;
     const number = numberRef.current;
-    const image = imageRef.current;
+    const preview = previewRef.current;
     const text = textRef.current;
 
     const slideDistance = direction * 100;
@@ -121,19 +114,18 @@ const AboutMeSlider = () => {
       onComplete: () => {
         setCurrentIndex(newIndex);
         setIsAnimating(false);
-        preloadImages(newIndex);
       },
       defaults: { ease: "power2.inOut", duration: 0.6 }
     });
 
     tl.to([title, number], { x: -slideDistance, opacity: 0 }, 0)
-      .to(image, { x: -slideDistance * 1.5, opacity: 0 }, 0)
+      .to(preview, { x: -slideDistance * 1.5, opacity: 0 }, 0)
       .to(text, { x: slideDistance * 1.5, opacity: 0 }, 0)
       .call(() => setCurrentIndex(newIndex))
-      .set([image, text], { x: slideDistance * 1.5 })
+      .set([preview, text], { x: slideDistance * 1.5 })
       .set([title, number], { x: slideDistance })
       .to([title, number], { x: 0, opacity: 1 })
-      .to([image, text], { x: 0, opacity: 1, stagger: 0.1 }, "-=0.4");
+      .to([preview, text], { x: 0, opacity: 1, stagger: 0.1 }, "-=0.4");
   };
 
   const handleNavigation = (direction) => {
@@ -175,7 +167,7 @@ const AboutMeSlider = () => {
 
     const title = titleRef.current;
     const number = numberRef.current;
-    const image = imageRef.current;
+    const preview = previewRef.current;
     const text = textRef.current;
 
     gsap.timeline({
@@ -183,20 +175,19 @@ const AboutMeSlider = () => {
         setCategory(newCategory);
         setCurrentIndex(0);
         setIsAnimating(false);
-        preloadImages(0);
       },
       defaults: { ease: "power2.inOut", duration: 0.6 }
     })
     .to([title, number], { x: -100, opacity: 0 }, 0)
-    .to([image, text], { y: 50, opacity: 0, stagger: 0.1 }, 0)
+    .to([preview, text], { y: 50, opacity: 0, stagger: 0.1 }, 0)
     .call(() => {
       setCategory(newCategory);
       setCurrentIndex(0);
     })
     .set([title, number], { x: 100 })
-    .set([image, text], { y: -50 })
+    .set([preview, text], { y: -50 })
     .to([title, number], { x: 0, opacity: 1 })
-    .to([image, text], { y: 0, opacity: 1, stagger: 0.1 }, "-=0.4");
+    .to([preview, text], { y: 0, opacity: 1, stagger: 0.1 }, "-=0.4");
   };
 
   return (
@@ -229,8 +220,8 @@ const AboutMeSlider = () => {
           </div>
         </div>
         <div ref={contentRef} className="about-me-content">
-          <div ref={imageRef} className="about-me-image">
-            <img src={categories[category][currentIndex].image} alt={categories[category][currentIndex].title} />
+          <div ref={previewRef} className="about-me-preview">
+            <WebsitePreview url={categories[category][currentIndex].url} />
           </div>
           <div ref={textRef} className="about-me-text">
             <h3>{categories[category][currentIndex].title}</h3>
