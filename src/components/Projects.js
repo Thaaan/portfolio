@@ -1,4 +1,4 @@
-import React, { useState, useRef } from 'react';
+import React, { useState, useRef, useCallback } from 'react';
 import Slider from 'react-slick';
 import Modal from 'react-modal';
 
@@ -47,16 +47,36 @@ const ProjectCarousel = () => {
   const [modalIsOpen, setModalIsOpen] = useState(false);
   const [selectedProject, setSelectedProject] = useState(null);
   const [currentIndex, setCurrentIndex] = useState(0);
+  const [isImageLoaded, setIsImageLoaded] = useState(false);
   const sliderRef = useRef(null);
 
-  const openModal = (project) => {
-    setSelectedProject(project);
-    setModalIsOpen(true);
+  const preloadImage = (src) => {
+    return new Promise((resolve, reject) => {
+      const img = new Image();
+      img.src = src;
+      img.onload = resolve;
+      img.onerror = reject;
+    });
   };
+
+  const openModal = useCallback(async (project) => {
+    setSelectedProject(project);
+    setIsImageLoaded(false);
+    try {
+      await preloadImage(project.detailedImg);
+      setIsImageLoaded(true);
+      setModalIsOpen(true);
+    } catch (error) {
+      console.error('Failed to load image:', error);
+      // Optionally, you can still open the modal or show an error message
+      setModalIsOpen(true);
+    }
+  }, []);
 
   const closeModal = () => {
     setModalIsOpen(false);
     setSelectedProject(null);
+    setIsImageLoaded(false);
   };
 
   const handleSlideClick = (index, project) => {
@@ -124,7 +144,7 @@ const ProjectCarousel = () => {
       </Slider>
       {selectedProject && (
         <Modal
-          isOpen={modalIsOpen}
+          isOpen={modalIsOpen && isImageLoaded}
           onRequestClose={closeModal}
           contentLabel="Project Details"
           className="modal"

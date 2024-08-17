@@ -87,6 +87,24 @@ const AboutMeSlider = () => {
     ]
   };
 
+  const preloadImages = (index) => {
+    const currentCategory = categories[category];
+    const imagesToPreload = [
+      currentCategory[(index - 1 + currentCategory.length) % currentCategory.length].image,
+      currentCategory[index].image,
+      currentCategory[(index + 1) % currentCategory.length].image
+    ];
+
+    imagesToPreload.forEach(src => {
+      const img = new Image();
+      img.src = src;
+    });
+  };
+
+  useEffect(() => {
+    preloadImages(currentIndex);
+  }, [category, currentIndex]);
+
   const animateContent = (direction, newIndex) => {
     if (isAnimating) return;
     setIsAnimating(true);
@@ -103,6 +121,7 @@ const AboutMeSlider = () => {
       onComplete: () => {
         setCurrentIndex(newIndex);
         setIsAnimating(false);
+        preloadImages(newIndex);
       },
       defaults: { ease: "power2.inOut", duration: 0.6 }
     });
@@ -164,6 +183,7 @@ const AboutMeSlider = () => {
         setCategory(newCategory);
         setCurrentIndex(0);
         setIsAnimating(false);
+        preloadImages(0);
       },
       defaults: { ease: "power2.inOut", duration: 0.6 }
     })
