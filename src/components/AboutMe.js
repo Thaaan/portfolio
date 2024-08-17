@@ -82,39 +82,7 @@ const AboutMeSlider = () => {
       {
         title: "Research Assistant at UC Berkeley Radwatch",
         content: "Utilized Raspberry Pi devices to study the inverse square law for radiation, contributing to the development of radiation detection and measurement tools.",
-        image: "https://ethirwin-portfolio-assets.s3.us-east-2.amazonaws.com/img/coursework/radwatch.png"
-      }
-    ],
-    hobbies: [
-      {
-        title: "Rock Climbing",
-        content: "Rock climbing is my go-to activity for a full-body workout and mental challenge. I love the sense of accomplishment that comes with reaching the top of a difficult route.",
-        image: "https://via.placeholder.com/800x300.png?text=Rock+Climbing"
-      },
-      {
-        title: "Hiking",
-        content: "Hiking allows me to unwind and reconnect with nature. There's nothing like reaching a summit and taking in the panoramic views after a challenging hike.",
-        image: "https://via.placeholder.com/800x300.png?text=Hiking"
-      },
-      {
-        title: "Skateboarding",
-        content: "Skateboarding is not just a sport for me; it's a creative outlet. I enjoy the process of learning new tricks and the freedom it gives me to express myself.",
-        image: "https://via.placeholder.com/800x300.png?text=Skateboarding"
-      },
-      {
-        title: "Fashion and Tailoring",
-        content: "I have a passion for fashion, particularly Japanese styles. I enjoy buying used designer clothes for cheap and fixing them up to create unique outfits.",
-        image: "https://via.placeholder.com/800x300.png?text=Fashion+and+Tailoring"
-      },
-      {
-        title: "Photography",
-        content: "Photography helps me capture the beauty of everyday moments. Whether it's a stunning landscape or a candid shot, I love preserving memories through my lens.",
-        image: "https://via.placeholder.com/800x300.png?text=Photography"
-      },
-      {
-        title: "3D Printing",
-        content: "3D printing combines my passion for technology and creativity. I enjoy designing intricate models and seeing them come to life layer by layer.",
-        image: "https://via.placeholder.com/800x300.png?text=3D+Printing"
+        image: "https://ethirwin-portfolio-assets.s3.us-east-2.amazonaws.com/img/coursework/radwatch.jpg"
       }
     ]
   };
@@ -237,14 +205,6 @@ const AboutMeSlider = () => {
             >
               <Briefcase size={24} />
               <span>Experience</span>
-            </button>
-            <button
-              onClick={() => handleCategoryChange('hobbies')}
-              className={`category-button ${category === 'hobbies' ? 'active' : ''}`}
-              aria-label="Hobbies"
-            >
-              <Camera size={24} />
-              <span>Hobbies</span>
             </button>
           </div>
         </div>

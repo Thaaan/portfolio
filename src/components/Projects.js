@@ -7,8 +7,8 @@ import './Projects.css'
 const projects = [
   {
     title: 'SmartLinked',
-    img: 'https://d37cdst5t0g8pp.cloudfront.net/img/projects/smartlinked-dashboard.png',
-    detailedImg: 'https://d37cdst5t0g8pp.cloudfront.net/img/projects/smartlinked.png',
+    img: 'https://d37cdst5t0g8pp.cloudfront.net/img/projects/smartlinked.png',
+    detailedImg: 'https://d37cdst5t0g8pp.cloudfront.net/img/projects/smartlinked-collage.png',
     linkTitle: 'Website',
     link: 'https://www.smartlinked.app/',
     description: 'SmartLinked is an AI-powered LinkedIn enhancer that offers personalized profile suggestions to help users optimize their LinkedIn presence.',

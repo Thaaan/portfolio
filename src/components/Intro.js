@@ -17,7 +17,7 @@ const Intro = () => {
         <h1 className="welcome-text">Welcome</h1>
         <h2 className="name-text">I'm Ethan</h2>
         <p className="intro-description">
-          A passionate software engineer and avid problem solver. Check out the simple digit classiifer demo on the right!
+          A passionate software engineer and avid problem solver. Check out the simple digit classifier demo on the right!
         </p>
         <div className="social-links">
           {socialLinks.map((link, index) => (
