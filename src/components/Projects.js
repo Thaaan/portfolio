@@ -12,7 +12,7 @@ const projects = [
     linkTitle: 'Website',
     link: 'https://www.smartlinked.app/',
     description: 'SmartLinked is an AI-powered LinkedIn enhancer that offers personalized profile suggestions to help users optimize their LinkedIn presence.',
-    skills: ['React', 'Node.js', 'AI', 'Machine Learning']
+    skills: ['React', 'JavaScript', 'CSS', 'HTML', 'PyTorch']
   },
   {
     title: 'KudoTools',
@@ -21,16 +21,16 @@ const projects = [
     linkTitle: 'Github',
     link: 'https://github.com/Kudo-Tools/kudo-tools.github.io',
     description: 'KudoTools is a resource manager designed to assist in purchasing desirable e-commerce items for resale at a higher price. It includes tools like auto captcha solvers, recaptcha bypasses, and more.',
-    skills: ['Python', 'Web Scraping', 'Automation', 'Security']
+    skills: ['Java', 'Python', 'PHP', 'CSS', 'HTML', 'JavaScript', 'Selenium']
   },
   {
-    title: 'Project 3',
-    img: 'https://via.placeholder.com/800x400',
-    detailedImg: 'https://via.placeholder.com/400x800',
-    linkTitle: '',
-    link: '#',
-    description: 'Detailed information about Project 3',
-    skills: ['Skill1', 'Skill2', 'Skill3']
+    title: 'ThaanAquatics',
+    img: 'https://ethirwin-portfolio-assets.s3.us-east-2.amazonaws.com/img/projects/thaanaquatics.png',
+    detailedImg: 'https://ethirwin-portfolio-assets.s3.us-east-2.amazonaws.com/img/projects/thaanaquatics-collage.png',
+    linkTitle: 'Github',
+    link: 'https://github.com/Thaaan/ThaanAquatics',
+    description: 'ThaanAquatics is an e-commerce platform for selling aquarium supplies and live fish. It features an intuitive user interface, efficient product categorization, and a secure payment system for customers. The website allows users to browse various aquarium supplies and purchase live fish, with integration for inventory management and shipping logistics.',
+    skills: ['JavaScript', 'CSS', 'HTML', 'EJS', 'Express', 'MySQL', 'SQL']
   },
   {
     title: 'Project 4',

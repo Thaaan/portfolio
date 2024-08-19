@@ -7,14 +7,14 @@ import './AboutMeSlider.css';
 
 gsap.registerPlugin(Observer);
 
-const WebsitePreview = ({ url }) => {
+const WebsitePreview = ({ url, isVisible }) => {
   return (
     <iframe
       src={url}
       title="Website Preview"
       width="100%"
       height="100%"
-      style={{ border: 'none' }}
+      style={{ border: 'none', display: isVisible ? 'block' : 'none' }}
     />
   );
 };
@@ -98,6 +98,12 @@ const AboutMeSlider = () => {
         url: "https://radwatch.berkeley.edu/"
       }
     ]
+  };
+
+  const getAdjacentIndices = (index, length) => {
+    const prevIndex = (index - 1 + length) % length;
+    const nextIndex = (index + 1) % length;
+    return [prevIndex, index, nextIndex];
   };
 
   const animateContent = (direction, newIndex) => {
@@ -244,7 +250,13 @@ const AboutMeSlider = () => {
         </div>
         <div ref={contentRef} className="about-me-content">
           <div ref={previewRef} className="about-me-preview">
-            <WebsitePreview url={categories[category][currentIndex].url} />
+            {getAdjacentIndices(currentIndex, categories[category].length).map((index) => (
+              <WebsitePreview
+                key={index}
+                url={categories[category][index].url}
+                isVisible={index === currentIndex}
+              />
+            ))}
           </div>
           <div ref={textRef} className="about-me-text">
             <h3>{categories[category][currentIndex].title}</h3>

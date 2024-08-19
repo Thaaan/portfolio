@@ -3,8 +3,8 @@ import { GraduationCap, Code, Wrench } from 'lucide-react';
 import './ProfileComponent.css';
 
 const ProfileComponent = () => {
-  const languages = ['Java', 'C', 'Python', 'React', 'HTML', 'CSS', 'JS', 'SQL', 'PHP'];
-  const tools = ['Git', 'Selenium', 'TensorFlow', 'PyTorch'];
+  const languages = ['Java', 'C', 'Python', 'React', 'HTML', 'CSS', 'JavaScript', 'SQL', 'PHP'];
+  const tools = ['Git', 'Selenium', 'TensorFlow', 'PyTorch', 'MySQL', 'React'];
 
   return (
     <div className="profile-container" id="profile">
