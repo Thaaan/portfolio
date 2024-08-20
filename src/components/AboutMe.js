@@ -1,23 +1,30 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { gsap } from 'gsap';
 import { Observer } from 'gsap/Observer';
-import { GraduationCap, Briefcase } from 'lucide-react';
+import { GraduationCap, Briefcase, ChevronLeft, ChevronRight } from 'lucide-react';
 
 import './AboutMeSlider.css';
 
 gsap.registerPlugin(Observer);
 
-const WebsitePreview = ({ url, isVisible }) => {
+const WebsitePreview = React.memo(({ url, previewImageUrl, isVisible }) => {
+  const handleClick = useCallback(() => {
+    window.open(url, '_blank', 'noopener,noreferrer');
+  }, [url]);
+
   return (
-    <iframe
-      src={url}
-      title="Website Preview"
-      width="100%"
-      height="100%"
-      style={{ border: 'none', display: isVisible ? 'block' : 'none' }}
-    />
+    <div
+      className={`website-preview ${isVisible ? 'visible' : ''}`}
+      onClick={handleClick}
+    >
+      <img
+        src={previewImageUrl}
+        alt="Website Preview"
+        className="website-preview-image"
+      />
+    </div>
   );
-};
+});
 
 const AboutMeSlider = () => {
   const [category, setCategory] = useState('coursework');
@@ -38,64 +45,76 @@ const AboutMeSlider = () => {
       {
         title: "CS61B: Data Structures",
         content: "Covers the implementation and analysis of data structures, including lists, queues, trees, and graphs, along with algorithms for sorting and searching.",
-        url: "https://sp24.datastructur.es/"
+        url: "https://sp24.datastructur.es/",
+        previewImg: "https://ethirwin-portfolio-assets.s3.us-east-2.amazonaws.com/img/coursework/61b.png"
       },
       {
         title: "CS61C: Machine Structures",
         content: "Introduction to computer architecture, focusing on the relationship between hardware and software. Topics include assembly language, caching, pipelining, and parallel processing.",
-        url: "https://cs61c.org/"
+        url: "https://cs61c.org/",
+        previewImg: "https://ethirwin-portfolio-assets.s3.us-east-2.amazonaws.com/img/coursework/61c.png"
       },
       {
         title: "CS161: Computer Security",
         content: "Introduction to computer security, including cryptography, network security, and the analysis of vulnerabilities and defenses.",
-        url: "https://fa24.cs161.org/"
+        url: "https://fa24.cs161.org/",
+        previewImg: "https://ethirwin-portfolio-assets.s3.us-east-2.amazonaws.com/img/coursework/cs161.png"
       },
       {
         title: "EECS127: Optimization Models in Engineering",
         content: "Introduction to optimization techniques and their applications in engineering, covering linear, nonlinear, and integer programming.",
-        url: "https://www2.eecs.berkeley.edu/Courses/EECS127/"
+        url: "https://www2.eecs.berkeley.edu/Courses/EECS127/",
+        previewImg: "https://ethirwin-portfolio-assets.s3.us-east-2.amazonaws.com/img/coursework/eecs127.png"
       },
       {
         title: "CS170: Efficient Algorithms and Intractable Problems",
         content: "Studies algorithm design and analysis, including graph algorithms, dynamic programming, and NP-completeness.",
-        url: "https://cs170.org/"
+        url: "https://cs170.org/",
+        previewImg: "https://ethirwin-portfolio-assets.s3.us-east-2.amazonaws.com/img/coursework/cs170.png"
       },
       {
         title: "DATA100: Principles and Techniques of Data Science",
         content: "Combines inferential thinking, computational thinking, and real-world relevance to teach the data science process end-to-end.",
-        url: "https://ds100.org/"
+        url: "https://ds100.org/",
+        previewImg: "https://ethirwin-portfolio-assets.s3.us-east-2.amazonaws.com/img/coursework/data100.png"
       },
       {
         title: "CS70: Discrete Mathematics and Probability Theory",
         content: "Focuses on fundamental concepts in discrete mathematics and probability theory, including combinatorics, graph theory, and random variables.",
-        url: "https://www.eecs70.org/"
+        url: "https://www.eecs70.org/",
+        previewImg: "https://ethirwin-portfolio-assets.s3.us-east-2.amazonaws.com/img/coursework/cs70.png"
       },
       {
         title: "STAT134: Concepts of Probability",
         content: "Introduction to probability theory, including distributions, expectation, and the law of large numbers.",
-        url: "https://www.stat134.org/"
+        url: "https://www.stat134.org/",
+        previewImg: "https://ethirwin-portfolio-assets.s3.us-east-2.amazonaws.com/img/coursework/stat134.png"
       },
       {
         title: "STAT135: Concepts of Statistics",
         content: "Covers fundamental statistical concepts, including hypothesis testing, regression, and analysis of variance.",
-        url: "https://classes.berkeley.edu/content/2024-fall-stat-135-001-lec-001"
+        url: "https://classes.berkeley.edu/content/2024-fall-stat-135-001-lec-001",
+        previewImg: "https://ethirwin-portfolio-assets.s3.us-east-2.amazonaws.com/img/coursework/stat135.png"
       },
       {
         title: "Web Design Decal",
         content: "A student-run course that teaches the fundamentals of web design, covering topics such as HTML, CSS, and JavaScript, with a focus on hands-on projects.",
-        url: "https://webdesigndecal.github.io/"
+        url: "https://webdesigndecal.github.io/",
+        previewImg: "https://ethirwin-portfolio-assets.s3.us-east-2.amazonaws.com/img/coursework/wdd.png"
       }
     ],
     experience: [
       {
         title: "Software Developer at AppCensus",
         content: "Developed data scraping and analysis tools to enhance the company's cybersecurity database, focusing on extracting and organizing relevant information from applications.",
-        url: "https://www.appcensus.io/"
+        url: "https://www.appcensus.io/",
+        previewImg: "https://ethirwin-portfolio-assets.s3.us-east-2.amazonaws.com/img/experience/appcensus.png"
       },
       {
         title: "Research Assistant at UC Berkeley Radwatch",
         content: "Utilized Raspberry Pi devices to study the inverse square law for radiation, contributing to the development of radiation detection and measurement tools.",
-        url: "https://radwatch.berkeley.edu/"
+        url: "https://radwatch.berkeley.edu/",
+        previewImg: "https://ethirwin-portfolio-assets.s3.us-east-2.amazonaws.com/img/experience/radwatch.png"
       }
     ]
   };
@@ -221,8 +240,6 @@ const AboutMeSlider = () => {
 
   return (
     <div ref={containerRef} className="about-me-container" id="about">
-      <div className="navigation-overlay left-overlay" onClick={() => handleNavigation(-1)}></div>
-      <div className="navigation-overlay right-overlay" onClick={() => handleNavigation(1)}></div>
       <div className="about-me-content-wrapper">
         <div className="about-me-header">
           <h2 ref={titleRef} className="about-me-title">
@@ -254,6 +271,7 @@ const AboutMeSlider = () => {
               <WebsitePreview
                 key={index}
                 url={categories[category][index].url}
+                previewImageUrl={categories[category][index].previewImg}
                 isVisible={index === currentIndex}
               />
             ))}
@@ -262,6 +280,14 @@ const AboutMeSlider = () => {
             <h3>{categories[category][currentIndex].title}</h3>
             <p>{categories[category][currentIndex].content}</p>
           </div>
+        </div>
+        <div className="navigation-buttons">
+          <button className="nav-button prev" onClick={() => handleNavigation(-1)} aria-label="Previous">
+            <ChevronLeft size={24} />
+          </button>
+          <button className="nav-button next" onClick={() => handleNavigation(1)} aria-label="Next">
+            <ChevronRight size={24} />
+          </button>
         </div>
       </div>
     </div>

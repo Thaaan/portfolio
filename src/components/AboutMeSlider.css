@@ -1,48 +1,24 @@
+* {
+  box-sizing: border-box;
+}
+
 .about-me-container {
   width: 100%;
   position: relative;
   background-color: #1e1e2e;
-  padding: 40px 20px;
-  box-sizing: border-box;
-  align-items: center;
+  padding: 40px 0;
   color: #ffffff;
   min-height: 80vh;
   cursor: default;
-}
-
-.navigation-overlay {
-  position: absolute;
-  top: 0;
-  bottom: 0;
-  width: 25%;
-  z-index: 10;
-  cursor: pointer;
-  transition: opacity 1s ease;
-  opacity: 0;
-}
-
-.left-overlay {
-  left: 0;
-  background: linear-gradient(to right, rgba(255, 255, 255, 0.1), transparent);
-}
-
-.left-overlay:hover {
-  opacity: 1;
-}
-
-.right-overlay {
-  right: 0;
-  background: linear-gradient(to left, rgba(255, 255, 255, 0.1), transparent);
-}
-
-.right-overlay:hover {
-  opacity: 1;
+  overflow-x: hidden;
 }
 
 .about-me-content-wrapper {
-  max-width: 1400px;
+  max-width: 1300px;
   margin: 0 auto;
   width: 100%;
+  position: relative;
+  padding: 0 60px;
 }
 
 .about-me-header {
@@ -76,24 +52,43 @@
 }
 
 .about-me-preview {
-  width: 60%;
+  width: 55%;
   position: relative;
   z-index: 1;
   aspect-ratio: 16 / 9;
-  max-height: 400px;
+  max-height: 350px;
   overflow: hidden;
   border-radius: 10px;
+  cursor: pointer;
+  margin: 0 auto;
 }
 
-.about-me-preview iframe {
+.website-preview {
+  position: relative;
   width: 100%;
   height: 100%;
-  border: none;
+  display: none;
+  overflow: hidden;
+  cursor: pointer;
+}
+
+.website-preview.visible {
+  display: block;
+}
+
+.website-preview-image {
+  width: 100%;
+  height: 100%;
   object-fit: cover;
+  transition: transform 0.3s ease;
+}
+
+.website-preview:hover .website-preview-image {
+  transform: scale(1.015);
 }
 
 .about-me-text {
-  width: 35%;
+  width: 40%;
   padding-left: 20px;
   color: #ffffff;
 }
@@ -144,9 +139,56 @@
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
 }
 
+.navigation-buttons {
+  position: absolute;
+  top: 50%;
+  left: 0;
+  right: 0;
+  display: flex;
+  justify-content: space-between;
+  pointer-events: none;
+}
+
+.nav-button {
+  background-color: rgba(255, 255, 255, 0.2);
+  border: none;
+  border-radius: 50%;
+  width: 40px;
+  height: 40px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: background-color 0.3s ease;
+  pointer-events: auto;
+  position: absolute;
+  top: 50%;
+  transform: translateY(-50%);
+}
+
+.nav-button.prev {
+  left: 10px;
+}
+
+.nav-button.next {
+  right: 10px;
+}
+
+.nav-button:hover {
+  background-color: rgba(255, 255, 255, 0.3);
+}
+
+.nav-button svg {
+  color: #ffffff;
+}
+
 @media (max-width: 1024px) {
   .about-me-container {
-    padding: 30px 15px;
+    padding: 30px 0;
+  }
+
+  .about-me-content-wrapper {
+    padding: 0 30px;
   }
 
   .about-me-header {
@@ -160,26 +202,33 @@
 
   .about-me-content {
     flex-direction: column;
-  }
-
-  .about-me-preview,
-  .about-me-text {
-    width: 100%;
-    padding-left: 0;
+    align-items: center;
   }
 
   .about-me-preview {
+    width: 93%;
     max-height: 300px;
+    margin-bottom: 20px;
   }
 
   .about-me-text {
+    width: 100%;
+    padding-left: 0;
     margin-top: 20px;
   }
 }
 
 @media (max-width: 768px) {
+  .about-me-content-wrapper {
+    padding: 0 20px;
+  }
+
   .about-me-title {
     font-size: 2.5rem;
+  }
+
+  .about-me-preview {
+    width: 100%;
   }
 
   .about-me-text h3 {
@@ -193,6 +242,10 @@
   .category-button {
     padding: 6px 12px;
     font-size: 0.8rem;
+  }
+
+  .navigation-buttons {
+    display: none;
   }
 }
 
