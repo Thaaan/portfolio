@@ -24,6 +24,15 @@ const projects = [
     skills: ['Java', 'Python', 'PHP', 'CSS', 'HTML', 'JavaScript', 'Selenium']
   },
   {
+    title: 'Portfolio',
+    img: 'https://ethirwin-portfolio-assets.s3.us-east-2.amazonaws.com/img/projects/portfolio.png',
+    detailedImg: 'https://ethirwin-portfolio-assets.s3.us-east-2.amazonaws.com/img/projects/portfolio-collage.png',
+    linkTitle: 'Github',
+    link: 'https://github.com/Thaaan/portfolio',
+    description: 'This portfolio website highlights my software development skills, projects, and professional journey. It features a modern, responsive design with interactive elements, including a real-time MNIST digit classifier demo, showcasing my expertise in front-end development, back-end integration, and machine learning.',
+    skills: ['React', 'JavaScript', 'HTML', 'CSS', 'Python', 'Flask', 'RESTful API', 'Machine Learning', 'TensorFlow', 'Redis', 'GSAP']
+  },
+  {
     title: 'ThaanAquatics',
     img: 'https://ethirwin-portfolio-assets.s3.us-east-2.amazonaws.com/img/projects/thaanaquatics.png',
     detailedImg: 'https://ethirwin-portfolio-assets.s3.us-east-2.amazonaws.com/img/projects/thaanaquatics-collage.png',
@@ -31,16 +40,7 @@ const projects = [
     link: 'https://github.com/Thaaan/ThaanAquatics',
     description: 'ThaanAquatics is an e-commerce platform for selling aquarium supplies and live fish. It features an intuitive user interface, efficient product categorization, and a secure payment system for customers. The website allows users to browse various aquarium supplies and purchase live fish, with integration for inventory management and shipping logistics.',
     skills: ['JavaScript', 'CSS', 'HTML', 'EJS', 'Express', 'MySQL', 'SQL']
-  },
-  {
-    title: 'Project 4',
-    img: 'https://via.placeholder.com/800x400',
-    detailedImg: 'https://via.placeholder.com/400x800',
-    linkTitle: '',
-    link: '#',
-    description: 'Detailed information about Project 4',
-    skills: ['Skill1', 'Skill2', 'Skill3']
-  },
+  }
 ];
 
 const ProjectCarousel = () => {
